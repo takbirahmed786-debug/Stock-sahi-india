@@ -35,7 +35,7 @@
 
     </header>
 
-    <nav class="market-nav"><a href="#market-overview">Market Overview</a><a href="#nse-deals">Large Deals</a><a href="#search-form">Stock Research</a><a href="#how-it-works">Methodology</a></nav>
+    <nav class="market-nav"><a href="#market-overview">Market Overview</a><a href="#nse-deals">Large Deals</a><a href="#search-form">Stock Research</a><a href="#peer-section">Peer Comparison</a><a href="#watchlist">Watchlist</a><a href="#how-it-works">Methodology</a></nav>
     <main>
       <section id="market-overview" class="market-board">
         <h1>Market Overview</h1>
@@ -62,6 +62,20 @@
       <div id="status" class="status" role="status" aria-live="polite" hidden></div>
       <div id="loading" class="loading" hidden><span class="spinner"></span><div><strong>Financial statements check ho rahe hain...</strong><p>Yahoo Finance source se actual available data load kar rahe hain. Pehli request slow ho sakti hai.</p></div></div>
       <div id="report" hidden></div>
+      <section id="peer-section" class="market-board">
+        <h2>Peer Comparison</h2>
+        <div class="market-ranges" id="peer-filters" aria-label="Peer metrics">
+          <button type="button" data-peer-filter="all" aria-pressed="true">All metrics</button>
+          <button type="button" data-peer-filter="valuation" aria-pressed="false">Valuation</button>
+          <button type="button" data-peer-filter="growth" aria-pressed="false">Growth &amp; returns</button>
+        </div>
+        <div id="peer-comparison" aria-live="polite"><p>Upar se stock search karein, phir uske industry peers compare karein.</p></div>
+      </section>
+      <section id="watchlist" class="market-board">
+        <h2>My Watchlist</h2>
+        <p class="market-source">Is browser mein saved stocks. Symbol par click karke report kholein.</p>
+        <div id="watchlist-items"></div>
+      </section>
 
       <section class="how" id="how-it-works">
         <div class="section-eyebrow">OUR METHODOLOGY</div>

@@ -104,9 +104,10 @@ async function loadReport(symbol){
   }catch(e){if(current===requestId)showStatus(e.message);}finally{if(current===requestId)setBusy(false);}
 }
 const list = (arr,type) => arr && arr.length ? `<ul class="notes-list ${type||''}">${arr.map(x=>`<li><i>${type==='negative'?'!':type==='neutral'?'i':'✓'}</i><span>${esc(x)}</span></li>`).join('')}</ul>` : `<div class="empty-state">Is category ke liye sufficient verified numbers nahi mile.</div>`;
-async function renderPeers(r, target) {
+async function renderPeers(r, target, dataPromise) {
   try {
-    const data = await getJSON('/api/peers?symbol=' + encodeURIComponent(r.symbol));
+    const data = await dataPromise;
+    if (r !== currentReport || target !== byId('peer-comparison')) return;
     if (!data.industry) {
       target.textContent = 'Is stock ke liye peer group available nahi hai. Valuation verify karne ke baad hi entry consider karein.';
       return;
@@ -123,9 +124,9 @@ async function renderPeers(r, target) {
       ['operating_cash_flow','Operating cash flow',v=>bigMoney(v,r)],
       ['free_cash_flow','Free cash flow',v=>bigMoney(v,r)]
     ];
-    const rows = formats.map(([key,label,format])=>{
+    const rows = formats.map(([key,label,format], index)=>{
       const benchmark = data.benchmarks[key], actual = r.metrics[key];
-      return '<tr><td>'+esc(label)+'</td><td>'+esc(isNum(actual)?format(actual):'N/A')+'</td><td>'+
+      return '<tr data-peer-metric="'+(index<2?'valuation':index<7?'growth':'other')+'"><td>'+esc(label)+'</td><td>'+esc(isNum(actual)?format(actual):'N/A')+'</td><td>'+
         esc(benchmark?format(benchmark.median):'N/A')+'</td><td>'+
         (benchmark?Object.entries(benchmark.values).map(([peer,value])=>esc(peer+' '+format(value))).join(' · '):'')+'</td></tr>';
     }).join('');
@@ -147,7 +148,9 @@ async function renderPeers(r, target) {
       '<div style="overflow-x:auto"><table><thead><tr><th>Metric</th><th>Company</th><th>Peer median</th><th>Peer values</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
       '<p><strong>Research conclusion</strong> '+esc(conclusion)+'</p>'+
       '<p class="section-sub">Yahoo Finance data. Har metric ke liye kam se kam 2 peer values chahiye. Median selected peers ka hai. EPS aur cash flow company size se affect hote hain. Relative premium ya discount fair value estimate nahi hai.</p>';
+    applyPeerFilter();
   } catch {
+    if (r !== currentReport || target !== byId('peer-comparison')) return;
     target.textContent = 'Peer data abhi load nahi hua. Valuation compare karne ke liye baad mein report dobara kholein.';
   }
 }
@@ -251,18 +254,18 @@ function renderReport(r){
   const annual=[...(r.annual||[])].reverse();
   const q=[...(r.quarterly||[])];
   reportEl.innerHTML=`
-  <div class="report-top"><div><div class="report-kicker">FUNDAMENTAL RESEARCH REPORT</div><h2 class="report-name">${esc(r.name)}</h2><div class="report-sub">${esc(r.symbol)} · ${esc(r.exchange)} · ${esc(r.sector)} · ${esc(r.industry)}</div></div><div class="report-actions"><button id="print-report">↧ &nbsp; Save as PDF</button><button id="share-report">↗ &nbsp; Share</button><button id="new-search">⌕ &nbsp; New search</button></div></div>
+  <div class="report-top"><div><div class="report-kicker">FUNDAMENTAL RESEARCH REPORT</div><h2 class="report-name">${esc(r.name)}</h2><div class="report-sub">${esc(r.symbol)} · ${esc(r.exchange)} · ${esc(r.sector)} · ${esc(r.industry)}</div></div><div class="report-actions"><button id="save-stock" type="button">Save to watchlist</button><a class="report-peer-link" href="#peer-section">Compare peers</a><button id="print-report">↧ &nbsp; Save as PDF</button><button id="share-report">↗ &nbsp; Share</button><button id="new-search">⌕ &nbsp; New search</button></div></div>
   <div class="report-main">
     <article class="report-card verdict-card"><div class="score-circle" style="background:conic-gradient(${color} ${ring}%,#304658 ${ring}%);"><div class="score-inner"><strong>${isNum(s.total)?s.total:'--'}</strong><span>out of 100</span></div></div><div class="verdict-copy"><span class="verdict-label ${s.signal.toLowerCase()}">${esc(s.signal==='CONSIDER'?'CONSIDER BUY':s.signal==='WAIT'?'WAIT':s.signal==='AVOID'?'AVOID':'NEEDS REVIEW')}</span><h3>${esc(s.signal_hi)}</h3><p>${esc(s.summary)}</p><div class="verdict-foot">Data coverage: ${s.coverage}% · Confidence: ${esc(s.confidence)}</div></div></article>
     <article class="report-card quote-card"><div><div class="quote-head"><span class="tiny-label">LATEST AVAILABLE CLOSE</span><span class="exchange-chip">${esc(r.exchange||'SHARE')}</span></div><div class="quote-price">${priceFmt(r.price,r)}</div><div class="quote-date">${esc(r.quote_date)} · price may be delayed</div></div><div class="quote-bottom"><div><small>1-year price change</small><strong class="${(r.one_year_return||0)<0?'down':'up'}">${signed(r.one_year_return)}</strong></div><div><small>Market cap</small><strong>${bigMoney(m.market_cap,r)}</strong></div></div></article>
   </div>
-  <article class="report-card chart-card"><h3>Industry peer comparison</h3><div id="peer-comparison">Peer numbers load ho rahe hain...</div></article>
+
   <div class="report-grid">
     <article class="report-card"><h3>Financial health score</h3><div class="section-sub">Rules-based weightage, 100-point scale</div>${s.categories.map(c=>`<div class="score-row"><label>${esc(c.label)}</label><div class="bar-track"><div class="bar-fill" style="width:${isNum(c.score)?c.score:0}%"></div></div><div class="score-value">${isNum(c.score)?Math.round(c.score):'N/A'}</div></div>`).join('')}<div class="chart-footer">Note: Missing metric score mein zero nahi lagaya. Available groups ke basis par weight adjust hota hai.</div></article>
     <article class="report-card"><h3>Key financial ratios</h3><div class="section-sub">Actual available financial values</div><div class="metric-grid">${metrics.map(x=>metric(...x)).join('')}</div></article>
   </div>
   <article class="report-card chart-card"><h3>Trading volume</h3>${tradingVolume(r.daily_volume)}</article>
-  <article class="report-card chart-card"><div class="chart-top"><div><h3>Share price history</h3><div class="section-sub">Past closing prices · adjusted for neither dividends nor total return</div></div>${tabs}</div><div class="chart-container" id="price-chart"></div><div class="chart-footer">Historical price chart sirf context ke liye hai, future growth ki guarantee nahi.</div></article>
+  <article class="report-card chart-card"><div class="chart-top"><div><h3>Share price history</h3><div class="section-sub">Past closing prices · adjusted for neither dividends nor total return</div></div>${tabs}</div><div class="chart-container" id="price-chart"></div>${priceTrend(r.price_history)}<div class="chart-footer">Historical price chart sirf context ke liye hai, future growth ki guarantee nahi.</div></article>
   <div class="report-grid">
     <article class="report-card"><h3>✓ Achhe points</h3><div class="section-sub">Available data mein positive signals</div>${list(r.positive)}</article>
     <article class="report-card"><h3>! Risk aur weak points</h3><div class="section-sub">Invest karne se pehle check karein</div>${list(r.concerns,'negative')}</article>
@@ -272,7 +275,9 @@ function renderReport(r){
   <article class="report-card chart-card"><h3>Verify before investing</h3><div class="section-sub">Jo cheezein automated ratio analysis se confirm nahi hotin</div>${list(r.cautions,'neutral')}</article>
   <article class="report-card chart-card"><h3>Data source & calculation</h3><p style="font-size:12px;color:#718696;line-height:1.8">${esc(r.methodology)}<br>Report generated: ${esc(new Date(r.fetched_at).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',dateStyle:'medium',timeStyle:'short'}))} IST. Delayed price, incomplete statements, restatements aur sector differences ho sakte hain.</p><div class="sources"><a href="${esc(r.source_url)}" target="_blank" rel="noopener noreferrer">Yahoo Finance source ↗</a><a href="https://www.nseindia.com/companies-listing/corporate-filings-financial-results" target="_blank" rel="noopener noreferrer">NSE official financial filings ↗</a><a href="https://www.bseindia.com/" target="_blank" rel="noopener noreferrer">BSE official filings ↗</a></div></article>
   `;
-  renderPeers(r, byId('peer-comparison'));
+  resetPeers(r);
+  syncWatchlistButton(r);
+  byId('save-stock').addEventListener('click', () => toggleWatchlist(r));
   byId('print-report').addEventListener('click',()=>window.print());
   byId('share-report').addEventListener('click',async()=>{
     const url=new URL(window.location.href);url.searchParams.set('symbol',r.symbol);
@@ -390,3 +395,96 @@ document.querySelector('.market-nav a[href="#nse-deals"]').addEventListener('cli
   byId('nse-deals').open = true;
 });
 if (location.hash === '#nse-deals') byId('nse-deals').open = true;
+
+function priceTrend(points) {
+  const closes = (points || []).filter(point => isNum(point.close));
+  const last = closes.at(-1);
+  if (!last || closes.length < 13) return '';
+  const average = closes.slice(-13).reduce((sum, point) => sum + point.close, 0) / 13;
+  if (average <= 0) return '';
+  return '<p class="market-source">13-point weekly trend · ' + esc(last.date) +
+    ' · Average close ' + nfmt(average,2) + ' · Latest close ' +
+    signed((last.close / average - 1) * 100) + ' vs average</p>';
+}
+
+let peerFilter = 'all';
+let peerRequest;
+const peerSection = byId('peer-section');
+function applyPeerFilter() {
+  peerSection.querySelectorAll('[data-peer-metric]').forEach(row => {
+    row.hidden = peerFilter !== 'all' && row.dataset.peerMetric !== peerFilter;
+  });
+}
+function resetPeers(r) {
+  peerRequest = null;
+  byId('peer-comparison').innerHTML = '<p>'+esc(r.name)+' · <button type="button" id="load-peers">Load peer comparison</button></p>';
+  byId('load-peers').addEventListener('click', loadPeers);
+  if (location.hash === '#peer-section') loadPeers();
+}
+function loadPeers() {
+  if (!currentReport || peerRequest) return;
+  const r = currentReport;
+  const panel = byId('peer-comparison');
+  const next = panel.cloneNode(false);
+  panel.replaceWith(next);
+  next.textContent = 'Loading industry peers for '+r.name+'…';
+  peerRequest = getJSON('/api/peers?symbol=' + encodeURIComponent(r.symbol)).catch(error => {
+    if (r === currentReport) peerRequest = null;
+    throw error;
+  });
+  renderPeers(r, next, peerRequest);
+}
+peerSection.querySelectorAll('[data-peer-filter]').forEach(button => {
+  button.addEventListener('click', () => {
+    peerFilter = button.dataset.peerFilter;
+    peerSection.querySelectorAll('[data-peer-filter]').forEach(item =>
+      item.setAttribute('aria-pressed', String(item === button)));
+    applyPeerFilter();
+    loadPeers();
+  });
+});
+document.addEventListener('click', event => {
+  if (event.target.closest('a[href="#peer-section"]')) loadPeers();
+});
+
+let savedStocks = [];
+try {
+  const stored = JSON.parse(localStorage.getItem('stocksahi-watchlist') || '[]');
+  if (Array.isArray(stored)) savedStocks = stored.filter(item => typeof item?.symbol === 'string' && typeof item?.name === 'string');
+} catch {}
+function syncWatchlistButton(r) {
+  const button = byId('save-stock');
+  if (button) button.textContent = savedStocks.some(item => item.symbol === r.symbol) ? 'Remove from watchlist' : 'Save to watchlist';
+}
+function toggleWatchlist(r) {
+  const next = savedStocks.some(item => item.symbol === r.symbol)
+    ? savedStocks.filter(item => item.symbol !== r.symbol)
+    : [...savedStocks, {symbol:r.symbol, name:r.name}];
+  try {
+    localStorage.setItem('stocksahi-watchlist', JSON.stringify(next));
+    savedStocks = next;
+    showWatchlist();
+    if (currentReport) syncWatchlistButton(currentReport);
+  } catch {
+    showStatus('Is browser mein watchlist save nahi ho saki.');
+  }
+}
+function showWatchlist() {
+  const host = byId('watchlist-items');
+  host.replaceChildren();
+  if (!savedStocks.length) host.textContent = 'Watchlist khaali hai. Stock report se share save karein.';
+  savedStocks.forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'watchlist-row';
+    const open = document.createElement('button');
+    open.textContent = item.name + ' · ' + item.symbol;
+    open.addEventListener('click', () => loadReport(item.symbol));
+    const remove = document.createElement('button');
+    remove.textContent = 'Remove';
+    remove.setAttribute('aria-label', 'Remove ' + item.symbol);
+    remove.addEventListener('click', () => toggleWatchlist(item));
+    row.append(open, remove);
+    host.append(row);
+  });
+}
+showWatchlist();

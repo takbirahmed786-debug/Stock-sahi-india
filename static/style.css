@@ -30,3 +30,5 @@ body{background:#f5f5fb;color:#20213e}
 #nse-deals summary{cursor:pointer;font-weight:800;color:#393171}
 #nse-deals th{background:#393171;color:white}
 @media(max-width:650px){.site-header{height:auto;align-items:stretch;flex-direction:column;gap:8px;padding:12px 16px}.market-nav{justify-content:flex-start;gap:17px}.market-board,#nse-deals{margin:12px;padding:14px}.market-quote{grid-template-columns:repeat(3,1fr)}.market-quote div:first-child{grid-column:1/-1}.market-chart{min-height:145px}}
+
+.report-peer-link{display:inline-block;padding:9px;color:#393171;font-weight:700}.watchlist-row{display:flex;justify-content:space-between;gap:10px;border-top:1px solid #e1dfed;padding:10px 0}.watchlist-row button,#load-peers{background:#efedfa;color:#393171;border:0;border-radius:6px;padding:7px 12px}#peer-section th,#peer-section td{white-space:nowrap;padding:8px}#peer-filters{display:flex;flex-wrap:wrap;gap:4px}
