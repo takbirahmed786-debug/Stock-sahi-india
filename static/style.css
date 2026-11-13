@@ -32,3 +32,26 @@ body{background:#f5f5fb;color:#20213e}
 @media(max-width:650px){.site-header{height:auto;align-items:stretch;flex-direction:column;gap:8px;padding:12px 16px}.market-nav{justify-content:flex-start;gap:17px}.market-board,#nse-deals{margin:12px;padding:14px}.market-quote{grid-template-columns:repeat(3,1fr)}.market-quote div:first-child{grid-column:1/-1}.market-chart{min-height:145px}}
 
 .report-peer-link{display:inline-block;padding:9px;color:#393171;font-weight:700}.watchlist-row{display:flex;justify-content:space-between;gap:10px;border-top:1px solid #e1dfed;padding:10px 0}.watchlist-row button,#load-peers{background:#efedfa;color:#393171;border:0;border-radius:6px;padding:7px 12px}#peer-section th,#peer-section td{white-space:nowrap;padding:8px}#peer-filters{display:flex;flex-wrap:wrap;gap:4px}
+
+#peer-section{border-color:#dddbea;box-shadow:0 6px 24px #2c25400b}
+#peer-section h2{margin:0 0 14px;color:#272244;letter-spacing:-.025em}
+#peer-filters button{margin:0;padding:7px 12px;border-radius:8px}
+.peer-heading{display:flex;justify-content:space-between;gap:12px;align-items:center;margin:18px 0 12px;padding:14px 16px;border-radius:10px;background:#f3f1fa}
+.peer-heading strong,.peer-heading div span{display:block}
+.peer-heading div span{font-size:13px;color:#645980;margin-top:3px}
+.peer-count{font-size:12px;color:#51447b;background:white;padding:5px 9px;border-radius:20px;text-align:center}
+.peer-table-wrap{border:1px solid #e8e5f0;border-radius:10px;overflow:hidden}
+.peer-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:14px}
+#peer-section .peer-table th,#peer-section .peer-table td{white-space:normal;text-align:left;vertical-align:top;padding:11px 12px;overflow-wrap:anywhere}
+.peer-table thead{background:#eeebf7;color:#443971}
+.peer-table th:first-child{width:26%}
+.peer-table tbody tr:nth-child(even){background:#faf9fd}
+.peer-table tbody tr+tr{border-top:1px solid #eeecf4}
+.peer-company{font-weight:750;font-variant-numeric:tabular-nums}
+.peer-missing{color:#716983}
+.peer-breakdown summary{cursor:pointer;color:#4d3c89;font-weight:650}
+.peer-breakdown ul{list-style:none;padding:0;margin:8px 0 0}
+.peer-breakdown li{display:flex;flex-wrap:wrap;justify-content:space-between;gap:3px 8px;padding:4px 0;font-size:12px}
+.peer-conclusion{background:#f0edf8;border-left:4px solid #5c4b92;margin-top:16px;padding:12px 15px;border-radius:6px;color:#322952}
+.peer-conclusion p{margin:5px 0 0}
+@media(max-width:550px){.peer-table{font-size:12px}#peer-section .peer-table td,#peer-section .peer-table th{padding:8px 5px}.peer-heading{padding:10px}.peer-breakdown li{font-size:10px}}

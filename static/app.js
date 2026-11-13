@@ -126,9 +126,14 @@ async function renderPeers(r, target, dataPromise) {
     ];
     const rows = formats.map(([key,label,format], index)=>{
       const benchmark = data.benchmarks[key], actual = r.metrics[key];
-      return '<tr data-peer-metric="'+(index<2?'valuation':index<7?'growth':'other')+'"><td>'+esc(label)+'</td><td>'+esc(isNum(actual)?format(actual):'N/A')+'</td><td>'+
-        esc(benchmark?format(benchmark.median):'N/A')+'</td><td>'+
-        (benchmark?Object.entries(benchmark.values).map(([peer,value])=>esc(peer+' '+format(value))).join(' · '):'')+'</td></tr>';
+      const peers = Object.entries(benchmark?.values || {});
+      const details = peers.length ? '<details class="peer-breakdown"><summary>View '+peers.length+' peers</summary><ul>'+
+        peers.map(([symbol,value])=>'<li><span>'+esc(symbol.replace(/\\.NS$/, ''))+'</span><strong>'+esc(format(value))+'</strong></li>').join('')+
+        '</ul></details>' : '<span class="peer-missing">—</span>';
+      return '<tr data-peer-metric="'+(index<2?'valuation':index<7?'growth':'other')+'">'+
+        '<th scope="row">'+esc(label)+'</th><td class="peer-company">'+
+        (isNum(actual)?esc(format(actual)):'<span class="peer-missing">—</span>')+'</td><td>'+
+        (benchmark?esc(format(benchmark.median)):'<span class="peer-missing">—</span>')+'</td><td>'+details+'</td></tr>';
     }).join('');
     const bank = data.industry.includes('banks');
     const key = bank?'price_to_book':'trailing_pe';
@@ -144,10 +149,10 @@ async function renderPeers(r, target, dataPromise) {
       else if (r.score.signal === 'CONSIDER' && gap <= 15) conclusion += ' Fundamentals screening pass hai, further research ke liye shortlist kar sakte hain.';
       if (bank) conclusion += ' Bank ke NPA, NIM aur capital adequacy bhi check karein.';
     }
-    target.innerHTML = '<p><strong>'+esc(data.industry)+'</strong> · '+esc(data.peers.join(', '))+'</p>'+
-      '<div style="overflow-x:auto"><table><thead><tr><th>Metric</th><th>Company</th><th>Peer median</th><th>Peer values</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
-      '<p><strong>Research conclusion</strong> '+esc(conclusion)+'</p>'+
-      '<p class="section-sub">Yahoo Finance data. Har metric ke liye kam se kam 2 peer values chahiye. Median selected peers ka hai. EPS aur cash flow company size se affect hote hain. Relative premium ya discount fair value estimate nahi hai.</p>';
+    target.innerHTML = '<div class="peer-heading"><div><strong>'+esc(r.name)+'</strong><span>'+esc(data.industry)+'</span></div><span class="peer-count">'+data.peers.length+' selected peers</span></div>'+
+      '<div class="peer-table-wrap"><table class="peer-table"><thead><tr><th>Metric</th><th>Company</th><th>Peer median</th><th>Breakdown</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+      '<div class="peer-conclusion"><strong>Research conclusion</strong><p>'+esc(conclusion)+'</p></div>'+
+      '<p class="section-sub">Dash means data unavailable. Source: Yahoo Finance. Har metric ke liye kam se kam 2 peer values chahiye. Median selected peers ka hai. EPS aur cash flow company size se affect hote hain. Relative premium ya discount fair value estimate nahi hai.</p>';
     applyPeerFilter();
   } catch {
     if (r !== currentReport || target !== byId('peer-comparison')) return;
