@@ -325,3 +325,68 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
 }
 const off=byId('offline-note');
 if (off) {off.hidden=navigator.onLine;window.addEventListener('offline',()=>{off.hidden=false});window.addEventListener('online',()=>{off.hidden=true});}
+
+async function showMarket() {
+  const strip = byId('market-indices');
+  const detail = byId('market-detail');
+  try {
+    const indices = await getJSON('/api/market-overview');
+    let selected = indices.findIndex(index => index.points.length >= 2);
+    let range = 22;
+    const change = index => {
+      const last = index.points.at(-1).close;
+      const prior = index.points.at(-2).close;
+      return {last, amount:last-prior, percent:(last/prior-1)*100};
+    };
+    const render = () => {
+      strip.innerHTML = indices.map((index,i) => {
+        const ready = index.points.length >= 2;
+        const quote = ready ? change(index) : null;
+        return '<button class="index-card '+(quote && quote.amount < 0?'negative':'')+
+          '" data-index="'+i+'" aria-pressed="'+(i===selected)+'" '+(ready?'':'disabled')+'>'+
+          '<span>'+esc(index.name)+'</span><strong>'+(quote?nfmt(quote.last,2):'N/A')+'</strong>'+
+          '<small>'+(quote?signed(quote.percent):'Data unavailable')+'</small></button>';
+      }).join('');
+      if (selected < 0) {
+        detail.textContent = 'Index data abhi available nahi hai. Thodi der baad refresh karein.';
+        return;
+      }
+      const index = indices[selected];
+      const quote = change(index);
+      const points = index.points.slice(-range);
+      const values = points.map(point => point.close);
+      const min = Math.min(...values), max = Math.max(...values);
+      const coords = points.map((point,i) => [60+ i*820/(points.length-1), 220-(point.close-min)*185/(max-min||1)].map(n=>n.toFixed(2)).join(','));
+      const grid = [0,1,2,3,4].map(i => {
+        const y = 35+i*185/4;
+        return '<line x1="60" x2="880" y1="'+y+'" y2="'+y+'" stroke="#e1e4ef"/>'+
+          '<text x="2" y="'+(y+4)+'">'+nfmt(max-(max-min)*i/4,0)+'</text>';
+      }).join('');
+      detail.innerHTML = '<div class="market-quote"><div><h2>'+esc(index.name)+'</h2><strong>'+nfmt(quote.last,2)+'</strong><p class="'+(quote.amount<0?'down':'up')+'">'+
+        (quote.amount>0?'+':'')+nfmt(quote.amount,2)+' ('+signed(quote.percent)+')</p></div>'+
+        [['Open',index.open],['High',index.high],['Low',index.low]].map(([label,v])=>'<div><span>'+label+'</span><strong>'+nfmt(v,2)+'</strong></div>').join('')+'</div>'+
+        '<div class="market-chart-bar"><span>Latest session '+esc(points.at(-1).date)+'</span><div class="market-ranges">'+
+        [[22,'1M'],[66,'3M'],[132,'6M'],[260,'1Y']].map(([n,label])=>'<button data-range="'+n+'" aria-pressed="'+(n===range)+'">'+label+'</button>').join('')+'</div></div>'+
+        '<svg class="market-chart" viewBox="0 0 900 250" role="img" aria-label="'+esc(index.name)+' daily close history"><defs><linearGradient id="index-fill" x2="0" y2="1"><stop stop-color="#6ca9d2" stop-opacity=".65"/><stop offset="1" stop-color="#eaf6fc"/></linearGradient></defs>'+
+        grid+'<polygon points="60,220 '+coords.join(' ')+' 880,220" fill="url(#index-fill)"/>'+
+        '<polyline points="'+coords.join(' ')+'" fill="none" stroke="#413581" stroke-width="2" vector-effect="non-scaling-stroke"/>'+
+        '<text x="60" y="244">'+esc(points[0].date)+'</text><text x="880" y="244" text-anchor="end">'+esc(points.at(-1).date)+'</text></svg>';
+    };
+    strip.addEventListener('click',event=>{
+      const button = event.target.closest('[data-index]');
+      if (button) {selected = Number(button.dataset.index);render();}
+    });
+    detail.addEventListener('click',event=>{
+      const button = event.target.closest('[data-range]');
+      if (button) {range = Number(button.dataset.range);render();}
+    });
+    render();
+  } catch {
+    detail.textContent = 'Index data abhi load nahi hua. Thodi der baad refresh karein.';
+  }
+}
+showMarket();
+document.querySelector('.market-nav a[href="#nse-deals"]').addEventListener('click',()=>{
+  byId('nse-deals').open = true;
+});
+if (location.hash === '#nse-deals') byId('nse-deals').open = true;

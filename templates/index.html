@@ -23,10 +23,26 @@
         <span class="brand-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 17l5-5 4 3 8-9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 6h5v5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
         <span>Stock<span class="brand-accent">Sahi</span><small>INDIA</small></span>
       </a>
-      <div class="header-right"><span class="header-tag"><span class="live-dot"></span> Fundamental Research</span><a class="method-link" href="#how-it-works">Kaise kaam karta hai? ↗</a></div>
+      <div class="search-wrap">
+            <form id="search-form" autocomplete="off">
+              <div class="search-box"><span class="search-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="10.7" cy="10.7" r="6.7" stroke="currentColor" stroke-width="2"/><path d="m16 16 5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+                <input id="search-input" aria-label="Company ka naam ya share symbol" type="search" placeholder="Reliance, TCS, ITC, HDFC Bank..." maxlength="60" required />
+                <button type="submit" class="search-btn">Analyze <span>↗</span></button>
+              </div>
+            </form>
+            <div id="suggestions" class="suggestions" role="listbox" hidden></div>
+          </div>
+
     </header>
 
+    <nav class="market-nav"><a href="#market-overview">Market Overview</a><a href="#nse-deals">Large Deals</a><a href="#search-form">Stock Research</a><a href="#how-it-works">Methodology</a></nav>
     <main>
+      <section id="market-overview" class="market-board">
+        <h1>Market Overview</h1>
+        <div id="market-indices" class="index-strip" aria-label="Market indices"></div>
+        <div id="market-detail" class="market-detail" aria-live="polite">Market data load ho raha hai…</div>
+        <p class="market-source">Source: Yahoo Finance · Delayed data · Daily closes</p>
+      </section>
       <details id="nse-deals" class="report-card">
         <summary>NSE Large Deals</summary>
         <div class="chart-tabs" aria-label="Deal category" style="margin:14px 0;flex-wrap:wrap">
@@ -41,34 +57,7 @@
         <p><a href="https://www.nseindia.com/market-data/large-deals" target="_blank" rel="noopener noreferrer">NSE official deals</a> ·
         <a href="https://www.nseindia.com/report-detail/display-bulk-and-block-deals" target="_blank" rel="noopener noreferrer">NSE deal archives</a></p>
       </details>
-      <section class="hero" id="top">
-        <div class="hero-copy">
-          <div class="eyebrow"><span class="eyebrow-line"></span> SMART STOCK RESEARCH</div>
-          <h1>Share kharidein?<br /><em>Ya abhi rukna</em> sahi hai?</h1>
-          <p class="hero-description">Kisi bhi listed company ka naam ya NSE/BSE symbol daaliye. Sales, profit, debt, cash flow aur valuation ki clear report dekhiye.</p>
-          <div class="search-wrap">
-            <form id="search-form" autocomplete="off">
-              <div class="search-box"><span class="search-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="10.7" cy="10.7" r="6.7" stroke="currentColor" stroke-width="2"/><path d="m16 16 5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
-                <input id="search-input" aria-label="Company ka naam ya share symbol" type="search" placeholder="Reliance, TCS, ITC, HDFC Bank..." maxlength="60" required />
-                <button type="submit" class="search-btn">Analyze <span>↗</span></button>
-              </div>
-            </form>
-            <div id="suggestions" class="suggestions" role="listbox" hidden></div>
-          </div>
-          <div class="popular"><span>Popular:</span><button data-symbol="RELIANCE.NS">Reliance</button><button data-symbol="TCS.NS">TCS</button><button data-symbol="ITC.NS">ITC</button><button data-symbol="HDFCBANK.NS">HDFC Bank</button></div>
-          <div class="hero-note"><span>✓ 5-point analysis</span><span>✓ Risks explained</span><span>✓ Free research tool</span></div>
-          <div id="install-help" class="install-hint">📱 Android: Chrome menu → <strong>Add to Home screen</strong>. Ek baar website live ho jaaye, tab StockSahi app ki tarah khulega. <span id="offline-note" hidden>Internet required: live share report offline nahi aata.</span></div>
-        </div>
-        <div class="hero-visual" aria-hidden="true">
-          <div class="decor-ring ring1"></div><div class="decor-ring ring2"></div>
-          <div class="mini-chart"><div class="mini-head"><span>COMPANY HEALTH</span><strong>Overview</strong></div>
-            <div class="visual-chart"><svg viewBox="0 0 350 126" preserveAspectRatio="none"><defs><linearGradient id="trend" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#4fddac" stop-opacity="0.30"/><stop offset="1" stop-color="#4fddac" stop-opacity="0"/></linearGradient></defs><path d="M0 109 C40 96 50 106 78 88 S124 92 150 72 S181 85 217 50 S260 60 287 29 S329 31 350 11 L350 126 L0 126Z" fill="url(#trend)"/><path d="M0 109 C40 96 50 106 78 88 S124 92 150 72 S181 85 217 50 S260 60 287 29 S329 31 350 11" fill="none" stroke="#57dbad" stroke-width="3" stroke-linecap="round" /></svg></div>
-            <div class="mini-foot"><span>REVENUE</span><span>PROFITABILITY</span><span>CASH FLOW</span></div>
-          </div>
-          <div class="float-stat float-left"><span class="float-icon">↗</span><div><span>Growth</span><strong>Business trend</strong></div></div>
-          <div class="float-stat float-right"><span class="float-icon gold">◆</span><div><span>Valuation</span><strong>Price vs earnings</strong></div></div>
-        </div>
-      </section>
+      <div id="top"></div><div id="install-help" hidden></div><span id="offline-note" hidden></span>
 
       <div id="status" class="status" role="status" aria-live="polite" hidden></div>
       <div id="loading" class="loading" hidden><span class="spinner"></span><div><strong>Financial statements check ho rahe hain...</strong><p>Yahoo Finance source se actual available data load kar rahe hain. Pehli request slow ho sakti hai.</p></div></div>

@@ -77,6 +77,40 @@ def nse_deals():
         return jsonify(json.loads(Path(__file__).with_name('nse_snapshot.json').read_text(encoding='utf-8')))
 
 
+INDICES = {
+    'Nifty 50': '^NSEI',
+    'Nifty Bank': '^NSEBANK',
+    'Nifty IT': '^CNXIT',
+    'Sensex': '^BSESN',
+}
+
+
+def index_history(item):
+    name, symbol = item
+    try:
+        import yfinance as yf
+        frame = yf.Ticker(symbol).history(period='1y', interval='1d', auto_adjust=False, timeout=8)
+        rows = frame.dropna(subset=['Close', 'Open', 'High', 'Low'])
+        points = [{'date': date.date().isoformat(), 'close': round(float(row.Close), 2)}
+                  for date, row in rows.iterrows()]
+        if len(points) < 2:
+            return {'name': name, 'points': []}
+        last = rows.iloc[-1]
+        return {'name': name, 'points': points, 'open': round(float(last.Open), 2),
+                'high': round(float(last.High), 2), 'low': round(float(last.Low), 2)}
+    except Exception:
+        app.logger.warning('Index history unavailable for %s', symbol)
+        return {'name': name, 'points': []}
+
+
+@app.get('/api/market-overview')
+def market_overview():
+    def build():
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            return list(pool.map(index_history, INDICES.items()))
+    return jsonify(cached('market-overview', 300, build))
+
+
 @app.get('/api/report')
 def report():
     symbol = (request.args.get('symbol') or '').strip().upper()
