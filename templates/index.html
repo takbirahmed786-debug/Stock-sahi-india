@@ -35,7 +35,7 @@
 
     </header>
 
-    <nav class="market-nav"><a href="#market-overview">Market Overview</a><a href="#nse-deals">Large Deals</a><a href="#search-form">Stock Research</a><a href="#peer-section">Peer Comparison</a><a href="#watchlist">Watchlist</a><a href="#how-it-works">Methodology</a></nav>
+    <nav class="market-nav"><a href="#market-overview">Market Overview</a><a href="#market-statistics">Market Statistics</a><a href="#nse-deals">Large Deals</a><a href="#search-form">Stock Research</a><a href="#peer-section">Peer Comparison</a><a href="#watchlist">Watchlist</a><a href="#how-it-works">Methodology</a></nav>
     <main>
       <section id="market-overview" class="market-board">
         <aside aria-label="StockSahi creator" style="display:flex;align-items:center;gap:14px;padding:14px 16px;margin:0 0 22px;background:linear-gradient(110deg,#f0ecfa,#faf9ff);border:1px solid #e2dcef;border-radius:14px">
@@ -50,6 +50,33 @@
         <div id="market-indices" class="index-strip" aria-label="Market indices"></div>
         <div id="market-detail" class="market-detail" aria-live="polite">Market data load ho raha hai…</div>
         <p class="market-source">Source: Yahoo Finance · Delayed data · Daily closes</p>
+      </section>
+      <section id="market-statistics" class="market-board" aria-labelledby="market-stat-title">
+        <style>
+          #market-statistics header{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+          #market-statistics h2{margin:0;color:#393171;font-size:22px}
+          .market-stat-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:10px;margin:0}
+          .market-stat-grid div{grid-column:span 3;background:#f7f6fc;border-top:3px solid var(--stat);border-radius:9px;padding:12px;min-width:0}
+          .market-stat-grid div:nth-child(n+9){grid-column:span 4}
+          .market-stat-grid dt{font-size:13px;color:#504a66}
+          .market-stat-grid dd{margin:5px 0 0;color:var(--stat);font-size:clamp(16px,2vw,23px);font-weight:800;overflow-wrap:anywhere}
+          @media(max-width:650px){.market-stat-grid div,.market-stat-grid div:nth-child(n+9){grid-column:span 6}}
+        </style>
+        <header><h2 id="market-stat-title">Market Statistics</h2><span class="market-source">Saved snapshot · 13 Nov 2026, 4:00 PM IST</span></header>
+        <dl class="market-stat-grid">
+          <div style="--stat:#51408b"><dt>Stocks traded</dt><dd>3,721</dd></div>
+          <div style="--stat:#22724e"><dt>Advances</dt><dd>1,445</dd></div>
+          <div style="--stat:#a8313f"><dt>Declines</dt><dd>2,179</dd></div>
+          <div style="--stat:#875014"><dt>Unchanged</dt><dd>97</dd></div>
+          <div style="--stat:#22724e"><dt>52-week high</dt><dd>102</dd></div>
+          <div style="--stat:#a8313f"><dt>52-week low</dt><dd>29</dd></div>
+          <div style="--stat:#22724e"><dt>Upper circuit</dt><dd>110</dd></div>
+          <div style="--stat:#a8313f"><dt>Lower circuit</dt><dd>96</dd></div>
+          <div style="--stat:#51408b"><dt>Registered client accounts</dt><dd>27,67,06,897</dd></div>
+          <div style="--stat:#51408b"><dt>Market capitalization</dt><dd>₹505.70 lakh crore</dd></div>
+          <div style="--stat:#51408b"><dt>Avg. order ack. latency</dt><dd>804 ns</dd></div>
+        </dl>
+        <p class="market-source">Source: NSE screenshot · <a href="https://www.nseindia.com/" target="_blank" rel="noopener noreferrer">View latest on NSE ↗</a></p>
       </section>
       <details id="nse-deals" class="report-card">
         <summary>NSE Large Deals</summary>
