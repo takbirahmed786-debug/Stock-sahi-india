@@ -183,6 +183,9 @@ def fetch_stock(symbol):
     if valid_prices.empty:
         raise ValueError('Is share ka valid closing price nahi mila.')
     latest_price = round(float(valid_prices.iloc[-1]), 2)
+    previous_close = round(float(valid_prices.iloc[-2]), 2) if len(valid_prices) >= 2 else None
+    daily_change = round(latest_price - previous_close, 2) if previous_close and previous_close > 0 else None
+    daily_change_pct = round(daily_change / previous_close * 100, 2) if daily_change is not None else None
     last_time = valid_prices.index[-1]
     last_date = pd.Timestamp(last_time).date().isoformat()
     one_year = valid_prices.loc[valid_prices.index >= valid_prices.index[-1] - pd.Timedelta(days=365)]
@@ -217,6 +220,8 @@ def fetch_stock(symbol):
         'industry': info.get('industry') or 'Not available',
         'info': info,
         'price': latest_price,
+        'daily_change': daily_change,
+        'daily_change_pct': daily_change_pct,
         'quote_date': last_date,
         'one_year_return': one_year_return,
         'annual': annual,

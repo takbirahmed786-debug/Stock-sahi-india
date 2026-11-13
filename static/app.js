@@ -230,6 +230,9 @@ dealSection.addEventListener('toggle', () => {
 });
 
 function renderReport(r){
+  const daily = r.daily_change;
+  const direction = isNum(daily) && daily !== 0 ? (daily > 0 ? 'up' : 'down') : 'flat';
+  const arrow = direction === 'up' ? '▲ ' : direction === 'down' ? '▼ ' : '';
   const s=r.score,m=r.metrics,good=s.signal==='CONSIDER',bad=s.signal==='AVOID';
   const color=good?'#58d5aa':bad?'#ff9098':s.signal==='WAIT'?'#f5c47d':'#9cb0c3';
   const ring=isNum(s.total)?s.total:0;
@@ -257,7 +260,7 @@ function renderReport(r){
   <div class="report-top"><div><div class="report-kicker">FUNDAMENTAL RESEARCH REPORT</div><h2 class="report-name">${esc(r.name)}</h2><div class="report-sub">${esc(r.symbol)} · ${esc(r.exchange)} · ${esc(r.sector)} · ${esc(r.industry)}</div></div><div class="report-actions"><button id="save-stock" type="button">Save to watchlist</button><a class="report-peer-link" href="#peer-section">Compare peers</a><button id="print-report">↧ &nbsp; Save as PDF</button><button id="share-report">↗ &nbsp; Share</button><button id="new-search">⌕ &nbsp; New search</button></div></div>
   <div class="report-main">
     <article class="report-card verdict-card"><div class="score-circle" style="background:conic-gradient(${color} ${ring}%,#304658 ${ring}%);"><div class="score-inner"><strong>${isNum(s.total)?s.total:'--'}</strong><span>out of 100</span></div></div><div class="verdict-copy"><span class="verdict-label ${s.signal.toLowerCase()}">${esc(s.signal==='CONSIDER'?'CONSIDER BUY':s.signal==='WAIT'?'WAIT':s.signal==='AVOID'?'AVOID':'NEEDS REVIEW')}</span><h3>${esc(s.signal_hi)}</h3><p>${esc(s.summary)}</p><div class="verdict-foot">Data coverage: ${s.coverage}% · Confidence: ${esc(s.confidence)}</div></div></article>
-    <article class="report-card quote-card"><div><div class="quote-head"><span class="tiny-label">LATEST AVAILABLE CLOSE</span><span class="exchange-chip">${esc(r.exchange||'SHARE')}</span></div><div class="quote-price">${priceFmt(r.price,r)}</div><div class="quote-date">${esc(r.quote_date)} · price may be delayed</div></div><div class="quote-bottom"><div><small>1-year price change</small><strong class="${(r.one_year_return||0)<0?'down':'up'}">${signed(r.one_year_return)}</strong></div><div><small>Market cap</small><strong>${bigMoney(m.market_cap,r)}</strong></div></div></article>
+    <article class="report-card quote-card"><div><div class="quote-head"><span class="tiny-label">LATEST AVAILABLE CLOSE</span><span class="exchange-chip">${esc(r.exchange||'SHARE')}</span></div><div class="quote-price" style="color:${direction==='up'?'#58d5aa':direction==='down'?'#ff9098':'inherit'}">${priceFmt(r.price,r)}</div><div class="quote-date ${direction}">${arrow}${isNum(daily)?(daily>0?'+':'')+nfmt(daily,2)+' ('+signed(r.daily_change_pct)+') vs previous close':'Daily change unavailable'}</div><div class="quote-date">${esc(r.quote_date)} · price may be delayed</div></div><div class="quote-bottom"><div><small>1-year price change</small><strong class="${(r.one_year_return||0)<0?'down':'up'}">${signed(r.one_year_return)}</strong></div><div><small>Market cap</small><strong>${bigMoney(m.market_cap,r)}</strong></div></div></article>
   </div>
 
   <div class="report-grid">
