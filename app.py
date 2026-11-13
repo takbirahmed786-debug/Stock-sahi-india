@@ -4,6 +4,7 @@ from __future__ import annotations
 from concurrent.futures import ThreadPoolExecutor
 from statistics import median
 import json
+from pathlib import Path
 from urllib.request import urlopen
 import os
 import re
@@ -73,7 +74,7 @@ def nse_deals():
     try:
         return jsonify(cached('nse-deals', 300, fetch))
     except (OSError, ValueError, KeyError):
-        return jsonify({'error': 'NSE deal feed abhi available nahi hai. Official NSE report kholein.'}), 503
+        return jsonify(json.loads(Path(__file__).with_name('nse_snapshot.json').read_text(encoding='utf-8')))
 
 
 @app.get('/api/report')

@@ -175,7 +175,7 @@ async function showNseDeals() {
       const rows = snapshot[type.value].filter(row => !term ||
         [row.symbol, row.name, row.clientName].some(value => String(value || '').toUpperCase().includes(term)));
       const headers = ['Symbol', 'Client', 'Side', 'Shares', 'Trade price (₹)'];
-      host.innerHTML = '<p>NSE snapshot ' + esc(snapshot.date) + ' · ' + rows.length + ' records</p>' +
+      host.innerHTML = '<p>NSE snapshot ' + esc(snapshot.date) + (snapshot.saved ? ' · Saved snapshot (live feed unavailable)' : '') + ' · ' + rows.length + ' records</p>' +
         (rows.length ? '<div style="overflow-x:auto"><table><thead><tr>' +
           headers.map(label => '<th>' + label + '</th>').join('') + '</tr></thead><tbody>' +
           rows.map(row => '<tr>' + [row.symbol, row.clientName, row.buySell, row.qty, row.watp]
