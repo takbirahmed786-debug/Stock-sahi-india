@@ -104,6 +104,53 @@ async function loadReport(symbol){
   }catch(e){if(current===requestId)showStatus(e.message);}finally{if(current===requestId)setBusy(false);}
 }
 const list = (arr,type) => arr && arr.length ? `<ul class="notes-list ${type||''}">${arr.map(x=>`<li><i>${type==='negative'?'!':type==='neutral'?'i':'✓'}</i><span>${esc(x)}</span></li>`).join('')}</ul>` : `<div class="empty-state">Is category ke liye sufficient verified numbers nahi mile.</div>`;
+async function renderPeers(r, target) {
+  try {
+    const data = await getJSON('/api/peers?symbol=' + encodeURIComponent(r.symbol));
+    if (!data.industry) {
+      target.textContent = 'Is stock ke liye peer group available nahi hai. Valuation verify karne ke baad hi entry consider karein.';
+      return;
+    }
+    const formats = [
+      ['trailing_pe','P/E',v=>nfmt(v,1)+'x'],
+      ['price_to_book','P/B',v=>nfmt(v,1)+'x'],
+      ['revenue_cagr','Sales CAGR',valPct], ['profit_cagr','Profit CAGR',valPct],
+      ['roe','ROE',valPct], ['roce','ROCE',valPct],
+      ['operating_margin','Operating margin',valPct],
+      ['debt_equity','Debt / Equity',v=>nfmt(v,2)],
+      ['current_ratio','Current ratio',v=>nfmt(v,2)],
+      ['eps','EPS (TTM)',v=>priceFmt(v,r)],
+      ['operating_cash_flow','Operating cash flow',v=>bigMoney(v,r)],
+      ['free_cash_flow','Free cash flow',v=>bigMoney(v,r)]
+    ];
+    const rows = formats.map(([key,label,format])=>{
+      const benchmark = data.benchmarks[key], actual = r.metrics[key];
+      return '<tr><td>'+esc(label)+'</td><td>'+esc(isNum(actual)?format(actual):'N/A')+'</td><td>'+
+        esc(benchmark?format(benchmark.median):'N/A')+'</td><td>'+
+        (benchmark?Object.entries(benchmark.values).map(([peer,value])=>esc(peer+' '+format(value))).join(' · '):'')+'</td></tr>';
+    }).join('');
+    const bank = data.industry.includes('banks');
+    const key = bank?'price_to_book':'trailing_pe';
+    const label = bank?'P/B':'P/E';
+    const benchmark = data.benchmarks[key]?.median, actual = r.metrics[key];
+    let conclusion = 'Wait for data. Comparable '+label+' verify karein.';
+    if (isNum(actual) && actual > 0 && benchmark > 0) {
+      const gap = (actual/benchmark-1)*100;
+      if (gap > 15) conclusion = label+' peers se '+nfmt(gap,1)+'% premium par hai. Wait karein aur dekhein kya growth ya profitability premium justify karti hai.';
+      else if (gap < -15) conclusion = label+' peers se '+nfmt(-gap,1)+'% discount par hai. Discount ka reason, earnings quality aur risks verify karein.';
+      else conclusion = label+' peer median ke kareeb hai. Entry decide karne se pehle latest results aur growth check karein.';
+      if (r.score.signal === 'AVOID') conclusion += ' Financial risk flags ke chalte abhi entry avoid karein.';
+      else if (r.score.signal === 'CONSIDER' && gap <= 15) conclusion += ' Fundamentals screening pass hai, further research ke liye shortlist kar sakte hain.';
+      if (bank) conclusion += ' Bank ke NPA, NIM aur capital adequacy bhi check karein.';
+    }
+    target.innerHTML = '<p><strong>'+esc(data.industry)+'</strong> · '+esc(data.peers.join(', '))+'</p>'+
+      '<div style="overflow-x:auto"><table><thead><tr><th>Metric</th><th>Company</th><th>Peer median</th><th>Peer values</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+      '<p><strong>Research conclusion</strong> '+esc(conclusion)+'</p>'+
+      '<p class="section-sub">Yahoo Finance data. Har metric ke liye kam se kam 2 peer values chahiye. Median selected peers ka hai. EPS aur cash flow company size se affect hote hain. Relative premium ya discount fair value estimate nahi hai.</p>';
+  } catch {
+    target.textContent = 'Peer data abhi load nahi hua. Valuation compare karne ke liye baad mein report dobara kholein.';
+  }
+}
 function renderReport(r){
   const s=r.score,m=r.metrics,good=s.signal==='CONSIDER',bad=s.signal==='AVOID';
   const color=good?'#58d5aa':bad?'#ff9098':s.signal==='WAIT'?'#f5c47d':'#9cb0c3';
@@ -134,6 +181,7 @@ function renderReport(r){
     <article class="report-card verdict-card"><div class="score-circle" style="background:conic-gradient(${color} ${ring}%,#304658 ${ring}%);"><div class="score-inner"><strong>${isNum(s.total)?s.total:'--'}</strong><span>out of 100</span></div></div><div class="verdict-copy"><span class="verdict-label ${s.signal.toLowerCase()}">${esc(s.signal==='CONSIDER'?'CONSIDER BUY':s.signal==='WAIT'?'WAIT':s.signal==='AVOID'?'AVOID':'NEEDS REVIEW')}</span><h3>${esc(s.signal_hi)}</h3><p>${esc(s.summary)}</p><div class="verdict-foot">Data coverage: ${s.coverage}% · Confidence: ${esc(s.confidence)}</div></div></article>
     <article class="report-card quote-card"><div><div class="quote-head"><span class="tiny-label">LATEST AVAILABLE CLOSE</span><span class="exchange-chip">${esc(r.exchange||'SHARE')}</span></div><div class="quote-price">${priceFmt(r.price,r)}</div><div class="quote-date">${esc(r.quote_date)} · price may be delayed</div></div><div class="quote-bottom"><div><small>1-year price change</small><strong class="${(r.one_year_return||0)<0?'down':'up'}">${signed(r.one_year_return)}</strong></div><div><small>Market cap</small><strong>${bigMoney(m.market_cap,r)}</strong></div></div></article>
   </div>
+  <article class="report-card chart-card"><h3>Industry peer comparison</h3><div id="peer-comparison">Peer numbers load ho rahe hain...</div></article>
   <div class="report-grid">
     <article class="report-card"><h3>Financial health score</h3><div class="section-sub">Rules-based weightage, 100-point scale</div>${s.categories.map(c=>`<div class="score-row"><label>${esc(c.label)}</label><div class="bar-track"><div class="bar-fill" style="width:${isNum(c.score)?c.score:0}%"></div></div><div class="score-value">${isNum(c.score)?Math.round(c.score):'N/A'}</div></div>`).join('')}<div class="chart-footer">Note: Missing metric score mein zero nahi lagaya. Available groups ke basis par weight adjust hota hai.</div></article>
     <article class="report-card"><h3>Key financial ratios</h3><div class="section-sub">Actual available financial values</div><div class="metric-grid">${metrics.map(x=>metric(...x)).join('')}</div></article>
@@ -148,6 +196,7 @@ function renderReport(r){
   <article class="report-card chart-card"><h3>Verify before investing</h3><div class="section-sub">Jo cheezein automated ratio analysis se confirm nahi hotin</div>${list(r.cautions,'neutral')}</article>
   <article class="report-card chart-card"><h3>Data source & calculation</h3><p style="font-size:12px;color:#718696;line-height:1.8">${esc(r.methodology)}<br>Report generated: ${esc(new Date(r.fetched_at).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',dateStyle:'medium',timeStyle:'short'}))} IST. Delayed price, incomplete statements, restatements aur sector differences ho sakte hain.</p><div class="sources"><a href="${esc(r.source_url)}" target="_blank" rel="noopener noreferrer">Yahoo Finance source ↗</a><a href="https://www.nseindia.com/companies-listing/corporate-filings-financial-results" target="_blank" rel="noopener noreferrer">NSE official financial filings ↗</a><a href="https://www.bseindia.com/" target="_blank" rel="noopener noreferrer">BSE official filings ↗</a></div></article>
   `;
+  renderPeers(r, byId('peer-comparison'));
   byId('print-report').addEventListener('click',()=>window.print());
   byId('share-report').addEventListener('click',async()=>{
     const url=new URL(window.location.href);url.searchParams.set('symbol',r.symbol);

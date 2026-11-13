@@ -1,6 +1,8 @@
 """StockSahi India - financial research dashboard."""
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
+from statistics import median
 import os
 import re
 import threading
@@ -57,7 +59,7 @@ def search():
 @app.get('/api/report')
 def report():
     symbol = (request.args.get('symbol') or '').strip().upper()
-    if not re.fullmatch(r'[A-Z0-9.\-^=]{1,30}', symbol):
+    if not re.fullmatch(r'[A-Z0-9.\-^=_]{1,30}', symbol):
         return jsonify({'error': 'Valid symbol dijiye, jaise RELIANCE.NS.'}), 400
     try:
         def build():
@@ -70,6 +72,57 @@ def report():
     except Exception:
         app.logger.exception('Data provider failed for %s', symbol)
         return jsonify({'error': 'Data provider se details nahi mil rahi. Rate limit / network issue ho sakta hai. Baad mein try karein.'}), 503
+
+
+# Selected NSE comparables, grouped by principal business.
+PEER_GROUPS = {
+    'IT services': 'TCS INFY WIPRO HCLTECH TECHM LTIM',
+    'Private sector banks': 'HDFCBANK ICICIBANK AXISBANK KOTAKBANK INDUSINDBK',
+    'Public sector banks': 'SBIN BANKBARODA PNB CANBK UNIONBANK',
+    'Integrated steel': 'TATASTEEL JSWSTEEL SAIL JINDALSTEL',
+    'Passenger vehicles': 'MARUTI HYUNDAI M&M TMPV',
+    'Decorative paints': 'ASIANPAINT BERGERPAINT KANSAINER INDIGOPNTS',
+    'Pharmaceuticals': 'SUNPHARMA DRREDDY CIPLA LUPIN AUROPHARMA',
+    'Cement': 'ULTRACEMCO SHREECEM AMBUJACEM ACC DALBHARAT',
+    'Integrated oil and refining': 'RELIANCE IOC BPCL HINDPETRO',
+    'Diversified FMCG': 'HINDUNILVR ITC DABUR MARICO GODREJCP',
+    'Defence electronics': 'BEL DATA_PATTERNS ASTRAMICRO',
+}
+
+
+def peer_metrics(symbol):
+    try:
+        return cached(('peer-metrics', symbol), 3600, lambda: derive_report(fetch_stock(symbol))['metrics'])
+    except Exception:
+        app.logger.warning('Peer data unavailable for %s', symbol)
+        return {}
+
+
+@app.get('/api/peers')
+def peers():
+    symbol = (request.args.get('symbol') or '').strip().upper()
+    ticker = symbol.removesuffix('.NS')
+    for industry, members in PEER_GROUPS.items():
+        group = members.split()
+        if ticker in group:
+            break
+    else:
+        return jsonify({'industry': None, 'peers': [], 'benchmarks': {}})
+    def build():
+        symbols = [item + '.NS' for item in group if item != ticker]
+        with ThreadPoolExecutor(max_workers=3) as pool:
+            reports = list(pool.map(peer_metrics, symbols))
+        benchmarks = {}
+        for key in set().union(*(report.keys() for report in reports)):
+            valid_peers = {
+                name: report[key] for name, report in zip(symbols, reports)
+                if report.get(key) is not None
+                and (key not in ('trailing_pe', 'price_to_book') or report[key] > 0)
+            }
+            if len(valid_peers) >= 2:
+                benchmarks[key] = {'median': median(valid_peers.values()), 'values': valid_peers}
+        return {'industry': industry, 'peers': symbols, 'benchmarks': benchmarks}
+    return jsonify(cached(('peer-group', ticker), 900, build))
 
 
 if __name__ == '__main__':
