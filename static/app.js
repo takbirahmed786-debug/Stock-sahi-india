@@ -151,6 +151,47 @@ async function renderPeers(r, target) {
     target.textContent = 'Peer data abhi load nahi hua. Valuation compare karne ke liye baad mein report dobara kholein.';
   }
 }
+function tradingVolume(rows) {
+  const latest = rows?.at(-1);
+  if (!latest || !isNum(latest.shares)) return 'Trading volume available nahi hai.';
+  const previous = rows.slice(0, -1);
+  const average = previous.length === 20 && previous.every(row => isNum(row.shares))
+    ? previous.reduce((sum, row) => sum + row.shares, 0) / 20 : null;
+  return '<p>' + esc(latest.date) + ' · <strong>' + nfmt(latest.shares, 0) +
+    ' shares traded</strong></p><p>Previous 20-session average ' +
+    (average > 0 ? nfmt(average, 0) + ' shares · ' + nfmt(latest.shares / average, 2) + '× average' : 'N/A') +
+    '</p><p class="section-sub">Yahoo Finance daily volume. Latest session may be partial or delayed.</p>';
+}
+
+async function showNseDeals() {
+  const host = byId('nse-deals-results');
+  const type = byId('nse-deal-type');
+  const query = byId('nse-deal-search');
+  host.textContent = 'NSE data load ho raha hai…';
+  try {
+    const snapshot = await getJSON('/api/nse-deals');
+    const render = () => {
+      const term = query.value.trim().toUpperCase();
+      const rows = snapshot[type.value].filter(row => !term ||
+        [row.symbol, row.name, row.clientName].some(value => String(value || '').toUpperCase().includes(term)));
+      const headers = ['Symbol', 'Client', 'Side', 'Shares', 'Trade price (₹)'];
+      host.innerHTML = '<p>NSE snapshot ' + esc(snapshot.date) + ' · ' + rows.length + ' records</p>' +
+        (rows.length ? '<div style="overflow-x:auto"><table><thead><tr>' +
+          headers.map(label => '<th>' + label + '</th>').join('') + '</tr></thead><tbody>' +
+          rows.map(row => '<tr>' + [row.symbol, row.clientName, row.buySell, row.qty, row.watp]
+            .map(value => '<td>' + esc(value ?? 'N/A') + '</td>').join('') + '</tr>').join('') +
+          '</tbody></table></div>' : '<p>Is snapshot mein matching record nahi mila.</p>');
+    };
+    type.onchange = query.oninput = render;
+    render();
+  } catch (error) {
+    host.textContent = error.message;
+  }
+}
+byId('nse-deals').addEventListener('toggle', event => {
+  if (event.currentTarget.open) showNseDeals();
+});
+
 function renderReport(r){
   const s=r.score,m=r.metrics,good=s.signal==='CONSIDER',bad=s.signal==='AVOID';
   const color=good?'#58d5aa':bad?'#ff9098':s.signal==='WAIT'?'#f5c47d':'#9cb0c3';
@@ -186,6 +227,7 @@ function renderReport(r){
     <article class="report-card"><h3>Financial health score</h3><div class="section-sub">Rules-based weightage, 100-point scale</div>${s.categories.map(c=>`<div class="score-row"><label>${esc(c.label)}</label><div class="bar-track"><div class="bar-fill" style="width:${isNum(c.score)?c.score:0}%"></div></div><div class="score-value">${isNum(c.score)?Math.round(c.score):'N/A'}</div></div>`).join('')}<div class="chart-footer">Note: Missing metric score mein zero nahi lagaya. Available groups ke basis par weight adjust hota hai.</div></article>
     <article class="report-card"><h3>Key financial ratios</h3><div class="section-sub">Actual available financial values</div><div class="metric-grid">${metrics.map(x=>metric(...x)).join('')}</div></article>
   </div>
+  <article class="report-card chart-card"><h3>Trading volume</h3>${tradingVolume(r.daily_volume)}</article>
   <article class="report-card chart-card"><div class="chart-top"><div><h3>Share price history</h3><div class="section-sub">Past closing prices · adjusted for neither dividends nor total return</div></div>${tabs}</div><div class="chart-container" id="price-chart"></div><div class="chart-footer">Historical price chart sirf context ke liye hai, future growth ki guarantee nahi.</div></article>
   <div class="report-grid">
     <article class="report-card"><h3>✓ Achhe points</h3><div class="section-sub">Available data mein positive signals</div>${list(r.positive)}</article>

@@ -197,6 +197,12 @@ def fetch_stock(symbol):
     q_income = dataframe(lambda: ticker.quarterly_income_stmt)
     annual = source_rows(income, balance, cashflow)
     quarterly = source_rows(q_income, pd.DataFrame(), pd.DataFrame())[:5]
+    daily_volume = []
+    if 'Volume' in history.columns:
+        for date, volume in history.loc[valid_prices.index, 'Volume'].tail(21).items():
+            value = safe_float(volume)
+            daily_volume.append({'date': pd.Timestamp(date).date().isoformat(),
+                                 'shares': int(value) if value is not None and value >= 0 else None})
     # Price history reduced to roughly weekly points; use original closing prices.
     price_history = [{'date': pd.Timestamp(idx).date().isoformat(), 'close': round(float(v), 2)}
                      for idx, v in valid_prices.iloc[::5].items()]
@@ -216,6 +222,7 @@ def fetch_stock(symbol):
         'annual': annual,
         'quarterly': quarterly,
         'price_history': price_history,
+        'daily_volume': daily_volume,
         'fetched_at': datetime.now(timezone.utc).isoformat(),
         'source': 'Yahoo Finance via yfinance (quotes may be delayed)',
         'source_url': 'https://finance.yahoo.com/quote/' + symbol.replace('^', '%5E') + '/',

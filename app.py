@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
 from statistics import median
+import json
+from urllib.request import urlopen
 import os
 import re
 import threading
@@ -54,6 +56,24 @@ def search():
         return jsonify({'results': stocks})
     except Exception:
         return jsonify({'error': 'Company lookup temporarily unavailable. NSE symbol .NS use karein.'}), 503
+
+
+@app.get('/api/nse-deals')
+def nse_deals():
+    def fetch():
+        with urlopen('https://www.nseindia.com/api/snapshot-capital-market-largedeal', timeout=8) as response:
+            snapshot = json.load(response)
+        return {
+            'date': snapshot['as_on_date'],
+            'bulk': snapshot['BULK_DEALS_DATA'],
+            'block': snapshot['BLOCK_DEALS_DATA'],
+            'short': snapshot['SHORT_DEALS_DATA'],
+        }
+
+    try:
+        return jsonify(cached('nse-deals', 300, fetch))
+    except (OSError, ValueError, KeyError):
+        return jsonify({'error': 'NSE deal feed abhi available nahi hai. Official NSE report kholein.'}), 503
 
 
 @app.get('/api/report')

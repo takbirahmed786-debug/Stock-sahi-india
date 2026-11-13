@@ -27,6 +27,17 @@
     </header>
 
     <main>
+      <details id="nse-deals" class="report-card">
+        <summary>NSE bulk deals, block deals &amp; short selling</summary>
+        <p><select id="nse-deal-type" aria-label="NSE report type">
+          <option value="bulk">Bulk deals</option><option value="block">Block deals</option>
+          <option value="short">Short selling</option>
+        </select>
+        <input id="nse-deal-search" aria-label="Filter NSE records" placeholder="Symbol or client name"></p>
+        <div id="nse-deals-results" aria-live="polite"></div>
+        <p><a href="https://www.nseindia.com/market-data/large-deals" target="_blank" rel="noopener noreferrer">NSE official deals</a> ·
+        <a href="https://www.nseindia.com/report-detail/display-bulk-and-block-deals" target="_blank" rel="noopener noreferrer">NSE deal archives</a></p>
+      </details>
       <section class="hero" id="top">
         <div class="hero-copy">
           <div class="eyebrow"><span class="eyebrow-line"></span> SMART STOCK RESEARCH</div>
