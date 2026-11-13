@@ -38,10 +38,14 @@
     <nav class="market-nav"><a href="#market-overview">Market Overview</a><a href="#nse-deals">Large Deals</a><a href="#search-form">Stock Research</a><a href="#peer-section">Peer Comparison</a><a href="#watchlist">Watchlist</a><a href="#how-it-works">Methodology</a></nav>
     <main>
       <section id="market-overview" class="market-board">
-        <div style="background:#393171;color:white;padding:16px 20px;border-radius:10px;margin-bottom:20px">
-          <strong style="display:block;font-size:18px">Shaikh Takbir Ahammed</strong>
-          <span style="display:block;margin-top:4px;color:#fff0be">Pehle numbers samjho, phir faisla lo.</span>
-        </div>
+        <aside aria-label="StockSahi creator" style="display:flex;align-items:center;gap:14px;padding:14px 16px;margin:0 0 22px;background:linear-gradient(110deg,#f0ecfa,#faf9ff);border:1px solid #e2dcef;border-radius:14px">
+          <span aria-hidden="true" style="display:grid;place-items:center;flex:0 0 48px;height:48px;border-radius:50%;background:#393171;color:white;font-weight:800;letter-spacing:.04em">ST</span>
+          <div style="min-width:0">
+            <span style="display:block;font-size:11px;font-weight:750;letter-spacing:.09em;text-transform:uppercase;color:#655987">Created by</span>
+            <strong style="display:block;font-size:clamp(16px,3vw,21px);line-height:1.25;color:#30255b">Shaikh Takbir Ahammed</strong>
+            <p style="margin:4px 0 0;font-size:13px;color:#51476a">Pehle numbers samjho, phir faisla lo.</p>
+          </div>
+        </aside>
         <h1>Market Overview</h1>
         <div id="market-indices" class="index-strip" aria-label="Market indices"></div>
         <div id="market-detail" class="market-detail" aria-live="polite">Market data load ho raha hai…</div>
