@@ -55,3 +55,5 @@ body{background:#f5f5fb;color:#20213e}
 .peer-conclusion{background:#f0edf8;border-left:4px solid #5c4b92;margin-top:16px;padding:12px 15px;border-radius:6px;color:#322952}
 .peer-conclusion p{margin:5px 0 0}
 @media(max-width:550px){.peer-table{font-size:12px}#peer-section .peer-table td,#peer-section .peer-table th{padding:8px 5px}.peer-heading{padding:10px}.peer-breakdown li{font-size:10px}}
+
+.financial-legend{font-size:12px;color:#546a7b;margin:10px 0}.financial-amount.strong,.financial-legend .strong{color:#126440;font-weight:700}.financial-amount.weak,.financial-legend .weak{color:#a62e38;font-weight:700}.financial-amount{white-space:nowrap}

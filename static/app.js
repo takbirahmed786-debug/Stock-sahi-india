@@ -303,9 +303,35 @@ function renderReport(r){
   renderPriceChart(r.price_history||[],1,r);
 }
 function financialTable(rows,r,quarterly=false){
-  if(!rows.length)return `<div class="empty-state">Financial statements ka data available nahi hai.</div>`;
-  const capital=quarterly?'<th>Period end</th>':'<th>FY end</th>';
-  return `<div class="table-wrap"><table class="financial-table"><thead><tr>${capital}<th>Revenue</th><th>Net Profit</th><th>EBIT</th>${quarterly?'':'<th>Operating CF</th><th>Free CF</th>'}</tr></thead><tbody>${rows.map(x=>`<tr><td>${esc(x.period_end || x.year)}</td><td>${bigMoney(x.revenue,r)}</td><td>${bigMoney(x.profit,r)}</td><td>${bigMoney(x.ebit,r)}</td>${quarterly?'':`<td>${bigMoney(x.cfo,r)}</td><td>${bigMoney(x.fcf,r)}</td>`}</tr>`).join('')}</tbody></table></div>`;
+  if (!rows.length) return '<div class="empty-state">Financial statements ka data available nahi hai.</div>';
+  const columns = [['revenue','Revenue'],['profit','Net Profit'],['ebit','EBIT']];
+  if (!quarterly) columns.push(['cfo','Operating CF'],['fcf','Free CF']);
+  const periodKey = row => quarterly ? row.period_end?.slice(0,7) : String(row.period_end || row.year).slice(0,4);
+  const byPeriod = new Map(rows.map(row => [periodKey(row), row]));
+  const comparison = quarterly ? 'same quarter last year' : 'previous financial year';
+  const tableRows = rows.map(row => {
+    const period = periodKey(row);
+    const previous = period && /^\d{4}(?:-\d{2})?$/.test(period)
+      ? byPeriod.get(String(Number(period.slice(0,4))-1) + period.slice(4)) : null;
+    const cells = columns.map(([key]) => {
+      const value = row[key], prior = previous?.[key];
+      let label = '', color = '', marker = '';
+      if (isNum(value) && value < 0) {
+        label = 'Negative amount'; color = 'weak'; marker = '!';
+      } else if (isNum(value) && isNum(prior) && value !== prior) {
+        const rising = value > prior;
+        label = (rising ? 'Higher' : 'Lower') + ' vs ' + comparison;
+        color = rising ? 'strong' : 'weak'; marker = rising ? '▲' : '▼';
+      }
+      return '<td><span class="financial-amount '+color+'"'+(label?' title="'+label+'"':'')+'>'+
+        (marker?'<span aria-label="'+label+'">'+marker+'</span> ':'')+bigMoney(value,r)+'</span></td>';
+    });
+    return '<tr><td>'+esc(row.period_end || row.year)+'</td>'+cells.join('')+'</tr>';
+  }).join('');
+  return '<p class="financial-legend">vs '+comparison+' · <span class="strong">▲ Higher</span> · <span class="weak">▼ Lower / ! Negative</span></p>'+
+    '<div class="table-wrap"><table class="financial-table"><thead><tr><th>'+
+    (quarterly?'Period end':'FY end')+'</th>'+columns.map(([,label])=>'<th>'+label+'</th>').join('')+
+    '</tr></thead><tbody>'+tableRows+'</tbody></table></div>';
 }
 function renderPriceChart(history,years,r){
   const host=byId('price-chart');if(!host)return;
