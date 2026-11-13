@@ -163,33 +163,67 @@ function tradingVolume(rows) {
     '</p><p class="section-sub">Yahoo Finance daily volume. Latest session may be partial or delayed.</p>';
 }
 
+let activeDealType = 'bulk';
+let dealRequest;
+let visibleDeals = [];
+const dealFields = [["date","Date"],["symbol","Symbol"],["name","Security name"],["clientName","Client name"],["buySell","Buy/Sell"],["qty","Volume"],["watp","Trade price / weighted average (₹)"],["remarks","Remarks"]];
+
 async function showNseDeals() {
   const host = byId('nse-deals-results');
-  const type = byId('nse-deal-type');
-  const query = byId('nse-deal-search');
   host.textContent = 'NSE data load ho raha hai…';
+  byId('nse-deals-download').disabled = true;
   try {
-    const snapshot = await getJSON('/api/nse-deals');
-    const render = () => {
-      const term = query.value.trim().toUpperCase();
-      const rows = snapshot[type.value].filter(row => !term ||
-        [row.symbol, row.name, row.clientName].some(value => String(value || '').toUpperCase().includes(term)));
-      const headers = ['Symbol', 'Client', 'Side', 'Shares', 'Trade price (₹)'];
-      host.innerHTML = '<p>NSE snapshot ' + esc(snapshot.date) + (snapshot.saved ? ' · Saved snapshot (live feed unavailable)' : '') + ' · ' + rows.length + ' records</p>' +
-        (rows.length ? '<div style="overflow-x:auto"><table><thead><tr>' +
-          headers.map(label => '<th>' + label + '</th>').join('') + '</tr></thead><tbody>' +
-          rows.map(row => '<tr>' + [row.symbol, row.clientName, row.buySell, row.qty, row.watp]
-            .map(value => '<td>' + esc(value ?? 'N/A') + '</td>').join('') + '</tr>').join('') +
-          '</tbody></table></div>' : '<p>Is snapshot mein matching record nahi mila.</p>');
-    };
-    type.onchange = query.oninput = render;
-    render();
+    dealRequest ||= getJSON('/api/nse-deals').catch(error => {
+      dealRequest = null;
+      throw error;
+    });
+    const snapshot = await dealRequest;
+    const term = byId('nse-deal-search').value.trim().toUpperCase();
+    const rows = snapshot[activeDealType];
+    visibleDeals = rows.filter(row => !term ||
+      [row.symbol, row.name, row.clientName].some(value => String(value || '').toUpperCase().includes(term)));
+    byId('nse-deals-download').disabled = !visibleDeals.length;
+    host.innerHTML = '<p><strong>' + visibleDeals.length + ' of ' + rows.length + ' records</strong> · ' +
+      esc(snapshot.date) + (snapshot.saved ? ' · Saved NSE snapshot' : ' · NSE feed') + '</p>' +
+      (visibleDeals.length ? '<div style="overflow-x:auto"><table><thead><tr>' +
+        dealFields.map(([,label]) => '<th scope="col">' + esc(label) + '</th>').join('') +
+        '</tr></thead><tbody>' + visibleDeals.map(row => '<tr>' + dealFields.map(([key]) =>
+          '<td>' + esc(row[key] ?? 'N/A') + '</td>').join('') + '</tr>').join('') +
+        '</tbody></table></div>' : '<p>Is snapshot mein matching record nahi mila.</p>');
   } catch (error) {
     host.textContent = error.message;
   }
 }
-byId('nse-deals').addEventListener('toggle', event => {
-  if (event.currentTarget.open) showNseDeals();
+
+const dealSection = byId('nse-deals');
+dealSection.querySelectorAll('[data-deal-type]').forEach(button => {
+  button.addEventListener('click', () => {
+    activeDealType = button.dataset.dealType;
+    dealSection.querySelectorAll('[data-deal-type]').forEach(item =>
+      item.setAttribute('aria-pressed', String(item === button)));
+    showNseDeals();
+  });
+});
+byId('nse-deal-search').addEventListener('input', showNseDeals);
+byId('nse-deals-download').addEventListener('click', () => {
+  const quote = value => {
+    const cell = String(value ?? '');
+    return '"' + (/^[\s]*[=+@-]/.test(cell) && cell !== '-' ? "'" : '') + cell.replaceAll('"', '""') + '"';
+  };
+  const lines = [dealFields.map(([,label]) => quote(label)).join(','),
+    ...visibleDeals.map(row => dealFields.map(([key]) => quote(row[key])).join(','))];
+  const url = URL.createObjectURL(new Blob(['\uFEFF' + lines.join('\r\n')], {type:'text/csv;charset=utf-8'}));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'nse-' + activeDealType + '-deals.csv';
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+dealSection.addEventListener('toggle', () => {
+  if (dealSection.open) {
+    dealRequest = null;
+    showNseDeals();
+  }
 });
 
 function renderReport(r){
