@@ -1,0 +1,26 @@
+STOCKSAHI INDIA - MOBILE SETUP (VIVO/ANDROID)
+================================================
+
+WEBSITE KA COMPLETE SOURCE PACKAGE READY HAI. LIVE WEBSITE LINK ABHI NAHI BANA.
+App ko phone par use karne ke liye pehle internet hosting karni hogi.
+
+OPTION A: ChatGPT mein Render connect karein, taaki deployment process mein help mil sake.
+StockSahi ka ek separate GitHub repository chahiye. Intercare-ERP repo mein ye app mat upload karein.
+
+OPTION B: Mobile browser se manual setup:
+1. ZIP download karein. Android File Manager > Extract karein.
+2. github.com par new repository "StockSahi-India" banayein.
+3. ZIP ke StockSahi folder ke andar ki sab files same hierarchy mein upload karein:
+   app.py, provider.py, analysis.py, requirements.txt, render.yaml, templates/, static/
+4. Render.com login > New > Web Service > GitHub repo select karein.
+5. Environment: Python. Build: pip install -r requirements.txt
+6. Start: gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 120 app:app
+7. Deployment successful hone par .onrender.com link milega. Usko Android Chrome mein open karein.
+8. Chrome > 3-dot menu > Add to Home screen > Install. App ki tarah icon ban jayega.
+
+IMPORTANT:
+- Financial reports ke liye internet chahiye. PWA ka offline shell reports ko offline fetch nahi karta.
+- Yahoo Finance (yfinance) personal/research data source; live production access reliable ya licensed nahi hai.
+- "Consider", "Wait", "Avoid" automated screening signals hain, guaranteed investment advice nahi.
+- Banks/NBFC/insurance ko specialist review signal milega.
+- 3-year scenarios hypothetical model hain, future market price ki guarantee nahi.

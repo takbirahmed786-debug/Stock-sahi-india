@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="hi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0a1522" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="manifest" href="/static/manifest.webmanifest" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/static/icon-192.png" />
+  <link rel="apple-touch-icon" href="/static/icon-192.png" />
+  <meta name="description" content="Indian stocks ke fundamentals, risk aur valuation ka transparent report. StockSahi personal research tool." />
+  <title>StockSahi | Share ka sach, numbers ke saath</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="shell">
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="StockSahi home">
+        <span class="brand-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 17l5-5 4 3 8-9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 6h5v5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <span>Stock<span class="brand-accent">Sahi</span><small>INDIA</small></span>
+      </a>
+      <div class="header-right"><span class="header-tag"><span class="live-dot"></span> Fundamental Research</span><a class="method-link" href="#how-it-works">Kaise kaam karta hai? ↗</a></div>
+    </header>
+
+    <main>
+      <section class="hero" id="top">
+        <div class="hero-copy">
+          <div class="eyebrow"><span class="eyebrow-line"></span> SMART STOCK RESEARCH</div>
+          <h1>Share kharidein?<br /><em>Ya abhi rukna</em> sahi hai?</h1>
+          <p class="hero-description">Kisi bhi listed company ka naam ya NSE/BSE symbol daaliye. Sales, profit, debt, cash flow aur valuation ki clear report dekhiye.</p>
+          <div class="search-wrap">
+            <form id="search-form" autocomplete="off">
+              <div class="search-box"><span class="search-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="10.7" cy="10.7" r="6.7" stroke="currentColor" stroke-width="2"/><path d="m16 16 5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+                <input id="search-input" aria-label="Company ka naam ya share symbol" type="search" placeholder="Reliance, TCS, ITC, HDFC Bank..." maxlength="60" required />
+                <button type="submit" class="search-btn">Analyze <span>↗</span></button>
+              </div>
+            </form>
+            <div id="suggestions" class="suggestions" role="listbox" hidden></div>
+          </div>
+          <div class="popular"><span>Popular:</span><button data-symbol="RELIANCE.NS">Reliance</button><button data-symbol="TCS.NS">TCS</button><button data-symbol="ITC.NS">ITC</button><button data-symbol="HDFCBANK.NS">HDFC Bank</button></div>
+          <div class="hero-note"><span>✓ 5-point analysis</span><span>✓ Risks explained</span><span>✓ Free research tool</span></div>
+          <div id="install-help" class="install-hint">📱 Android: Chrome menu → <strong>Add to Home screen</strong>. Ek baar website live ho jaaye, tab StockSahi app ki tarah khulega. <span id="offline-note" hidden>Internet required: live share report offline nahi aata.</span></div>
+        </div>
+        <div class="hero-visual" aria-hidden="true">
+          <div class="decor-ring ring1"></div><div class="decor-ring ring2"></div>
+          <div class="mini-chart"><div class="mini-head"><span>COMPANY HEALTH</span><strong>Overview</strong></div>
+            <div class="visual-chart"><svg viewBox="0 0 350 126" preserveAspectRatio="none"><defs><linearGradient id="trend" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#4fddac" stop-opacity="0.30"/><stop offset="1" stop-color="#4fddac" stop-opacity="0"/></linearGradient></defs><path d="M0 109 C40 96 50 106 78 88 S124 92 150 72 S181 85 217 50 S260 60 287 29 S329 31 350 11 L350 126 L0 126Z" fill="url(#trend)"/><path d="M0 109 C40 96 50 106 78 88 S124 92 150 72 S181 85 217 50 S260 60 287 29 S329 31 350 11" fill="none" stroke="#57dbad" stroke-width="3" stroke-linecap="round" /></svg></div>
+            <div class="mini-foot"><span>REVENUE</span><span>PROFITABILITY</span><span>CASH FLOW</span></div>
+          </div>
+          <div class="float-stat float-left"><span class="float-icon">↗</span><div><span>Growth</span><strong>Business trend</strong></div></div>
+          <div class="float-stat float-right"><span class="float-icon gold">◆</span><div><span>Valuation</span><strong>Price vs earnings</strong></div></div>
+        </div>
+      </section>
+
+      <div id="status" class="status" role="status" aria-live="polite" hidden></div>
+      <div id="loading" class="loading" hidden><span class="spinner"></span><div><strong>Financial statements check ho rahe hain...</strong><p>Yahoo Finance source se actual available data load kar rahe hain. Pehli request slow ho sakti hai.</p></div></div>
+      <div id="report" hidden></div>
+
+      <section class="how" id="how-it-works">
+        <div class="section-eyebrow">OUR METHODOLOGY</div>
+        <h2>Share ka decision sirf price dekhkar nahi.</h2>
+        <p>Har report actual available financial data se 5 categories mein score banati hai. Koi important data missing ho, toh app clear warning deti hai.</p>
+        <div class="how-grid">
+          <div class="how-card"><span class="how-number">01</span><div class="how-icon">↗</div><h3>Growth</h3><p>Sales aur profit ka 3-year trend, recent demand.</p></div>
+          <div class="how-card"><span class="how-number">02</span><div class="how-icon">◉</div><h3>Profitability</h3><p>ROE, ROCE aur operating margins.</p></div>
+          <div class="how-card"><span class="how-number">03</span><div class="how-icon">▦</div><h3>Balance sheet</h3><p>Debt, liquidity aur financial stability.</p></div>
+          <div class="how-card"><span class="how-number">04</span><div class="how-icon">≈</div><h3>Cash flow</h3><p>Reported profit cash mein convert ho raha hai?</p></div>
+          <div class="how-card"><span class="how-number">05</span><div class="how-icon">◇</div><h3>Valuation</h3><p>Share ka P/E aur uska basic risk.</p></div>
+        </div>
+        <div class="notice"><strong>Important:</strong> "Buy ke liye research", "Wait", aur "Avoid" ek rule-based screening signal hai, SEBI-registered investment advice nahi. Historical returns future ki guarantee nahi hain. Final decision se pehle NSE/BSE filings, promoter pledging, auditor notes aur industry peers verify karein. Bank/NBFC ke liye specialist review chahiye.</div>
+      </section>
+    </main>
+    <footer class="footer"><span>© 2026 StockSahi India · Personal research dashboard</span><span>Data: Yahoo Finance (may be delayed) · No guaranteed returns</span></footer>
+  </div>
+  <script src="/static/app.js" defer></script>
+</body>
+</html>
