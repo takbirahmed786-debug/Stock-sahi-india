@@ -280,9 +280,19 @@ function renderReport(r){
   </div>
   <article class="report-card chart-card"><h3>Annual financial history</h3><div class="section-sub">Reported fiscal years · values in ${r.currency==='INR'?'₹ crore':esc(r.currency)+' million'} · figures may be restated</div>${financialTable(annual,r)}${q.length?`<h3 style="margin-top:28px">Recent quarterly results</h3><div class="section-sub">Quarter-end data (as available)</div>${financialTable(q,r,true)}`:''}</article>
   <article class="report-card chart-card"><h3>3-year scenario analysis</h3><div class="section-sub">Profit/EPS growth aur future P/E badalne par price kya ho sakta hai?</div>${r.scenarios?.length?`<div class="scenario-grid">${r.scenarios.map(sc=>`<div class="scenario"><div class="scenario-title">${esc(sc.name)}</div><div class="scenario-price">${priceFmt(sc.price,r)}</div><div class="scenario-change ${sc.change_pct<0?'down':'up'}">${signed(sc.change_pct)} vs today</div><div class="scenario-assumption">Assumed EPS growth: <b>${signed(sc.eps_growth)} yearly</b><br>Assumed P/E after 3Y: <b>${nfmt(sc.future_pe,1)}x</b></div></div>`).join('')}</div>`:`<div class="empty-state">EPS / valuation / financial history poora nahi mila, isliye speculative price calculation nahi dikhaya.</div>`}<div class="scenario-warning">⚠ ${esc(r.scenario_note)}</div></article>
+  <article class="report-card chart-card valuation-tool">
+    <h3>Valuation Calculator</h3>
+    <p class="section-sub">Apna EPS aur P/E assumption daal kar implied price dekhein.</p>
+    <div class="feature-grid">
+      <label>Assumed EPS<input id="calc-eps" type="number" min="0.01" step="any" /></label>
+      <label>Assumed P/E<input id="calc-pe" type="number" min="0.01" step="any" /></label>
+      <div class="feature-tile"><span>Implied price</span><output id="calc-price" aria-live="polite"></output></div>
+    </div>
+  </article>
   <article class="report-card chart-card"><h3>Verify before investing</h3><div class="section-sub">Jo cheezein automated ratio analysis se confirm nahi hotin</div>${list(r.cautions,'neutral')}</article>
   <article class="report-card chart-card"><h3>Data source & calculation</h3><p style="font-size:12px;color:#718696;line-height:1.8">${esc(r.methodology)}<br>Report generated: ${esc(new Date(r.fetched_at).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',dateStyle:'medium',timeStyle:'short'}))} IST. Delayed price, incomplete statements, restatements aur sector differences ho sakte hain.</p><div class="sources"><a href="${esc(r.source_url)}" target="_blank" rel="noopener noreferrer">Yahoo Finance source ↗</a><a href="https://www.nseindia.com/companies-listing/corporate-filings-financial-results" target="_blank" rel="noopener noreferrer">NSE official financial filings ↗</a><a href="https://www.bseindia.com/" target="_blank" rel="noopener noreferrer">BSE official filings ↗</a></div></article>
   `;
+  setupValuation(r);
   resetPeers(r);
   syncWatchlistButton(r);
   byId('save-stock').addEventListener('click', () => toggleWatchlist(r));
@@ -377,6 +387,21 @@ async function showMarket() {
       const prior = index.points.at(-2).close;
       return {last, amount:last-prior, percent:(last/prior-1)*100};
     };
+    const available = indices.filter(index => index.points.length >= 2);
+    const pulse = byId('market-pulse');
+    if (available.length) {
+      const latestDate = available.map(index => index.points.at(-1).date).sort().at(-1);
+      const recent = available.filter(index => index.points.at(-1).date === latestDate);
+      const ranked = recent.map(index => ({name:index.name, ...change(index)})).sort((a,b) => b.percent-a.percent);
+      const rising = ranked.filter(index => index.amount > 0).length;
+      const falling = ranked.filter(index => index.amount < 0).length;
+      pulse.innerHTML = [
+        ['Index breadth', rising+' up · '+falling+' down', ranked.length+' tracked indices · '+latestDate],
+        ['Best performer',ranked[0].name,signed(ranked[0].percent)],
+        ['Weakest performer',ranked.at(-1).name,signed(ranked.at(-1).percent)]
+      ].map(([label,value,note]) => '<div class="feature-tile"><span>'+esc(label)+'</span><strong>'+esc(value)+'</strong><small>'+esc(note)+'</small></div>').join('');
+      pulse.hidden = false;
+    }
     const render = () => {
       strip.innerHTML = indices.map((index,i) => {
         const ready = index.points.length >= 2;
@@ -522,3 +547,17 @@ function showWatchlist() {
   });
 }
 showWatchlist();
+
+function setupValuation(report) {
+  const eps = byId('calc-eps'), pe = byId('calc-pe'), output = byId('calc-price');
+  eps.value = report.metrics.eps > 0 ? report.metrics.eps : '';
+  pe.value = report.metrics.trailing_pe > 0 ? report.metrics.trailing_pe : '';
+  const update = () => {
+    const value = eps.valueAsNumber * pe.valueAsNumber;
+    output.textContent = eps.validity.valid && pe.validity.valid && isNum(value) && value > 0
+      ? priceFmt(value, report) : 'Enter positive EPS and P/E';
+  };
+  eps.addEventListener('input', update);
+  pe.addEventListener('input', update);
+  update();
+}
