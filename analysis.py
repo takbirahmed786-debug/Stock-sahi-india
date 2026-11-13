@@ -99,12 +99,6 @@ def derive_report(raw):
     net = valid(last.get('profit'))
     cfo_conversion = round(cfo / net, 2) if cfo is not None and net is not None and net > 0 else None
     trailing_eps = valid(info.get('trailingEps'))
-    if trailing_eps is None:
-        quarters = (raw.get('quarterly') or [])[:4]
-        quarter_eps = [valid(row.get('eps')) for row in quarters]
-        periods = [row.get('period_end') for row in quarters]
-        if len(quarters) == 4 and all(periods) and len(set(periods)) == 4 and all(value is not None for value in quarter_eps):
-            trailing_eps = sum(quarter_eps)
     trailing_pe = valid(info.get('trailingPE'))
     pb = valid(info.get('priceToBook'))
     if trailing_pe is None and trailing_eps is not None and trailing_eps > 0 and valid(raw.get('price')):
