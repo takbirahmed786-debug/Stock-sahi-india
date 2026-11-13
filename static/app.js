@@ -400,7 +400,8 @@ async function showMarket() {
         ['Best performer',ranked[0].name,signed(ranked[0].percent)],
         ['Weakest performer',ranked.at(-1).name,signed(ranked.at(-1).percent)]
       ].map(([label,value,note]) => '<div class="feature-tile"><span>'+esc(label)+'</span><strong>'+esc(value)+'</strong><small>'+esc(note)+'</small></div>').join('');
-      pulse.hidden = false;
+    } else {
+      pulse.textContent = 'Market Pulse data abhi available nahi hai.';
     }
     const render = () => {
       strip.innerHTML = indices.map((index,i) => {
@@ -446,6 +447,7 @@ async function showMarket() {
     });
     render();
   } catch {
+    byId('market-pulse').textContent = 'Market Pulse data abhi load nahi hua.';
     detail.textContent = 'Index data abhi load nahi hua. Thodi der baad refresh karein.';
   }
 }
@@ -548,8 +550,8 @@ function showWatchlist() {
 }
 showWatchlist();
 
-function setupValuation(report) {
-  const eps = byId('calc-eps'), pe = byId('calc-pe'), output = byId('calc-price');
+function setupValuation(report, prefix = 'calc') {
+  const eps = byId(prefix+'-eps'), pe = byId(prefix+'-pe'), output = byId(prefix+'-price');
   eps.value = report.metrics.eps > 0 ? report.metrics.eps : '';
   pe.value = report.metrics.trailing_pe > 0 ? report.metrics.trailing_pe : '';
   const update = () => {
@@ -561,3 +563,5 @@ function setupValuation(report) {
   pe.addEventListener('input', update);
   update();
 }
+
+setupValuation({metrics:{},currency:'INR'}, 'home');

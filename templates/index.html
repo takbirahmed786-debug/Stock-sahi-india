@@ -35,7 +35,7 @@
 
     </header>
 
-    <nav class="market-nav"><a href="#market-overview">Market Overview</a><a href="#market-statistics">Market Statistics</a><a href="#nse-deals">Large Deals</a><a href="#search-form">Stock Research</a><a href="#peer-section">Peer Comparison</a><a href="#watchlist">Watchlist</a><a href="#how-it-works">Methodology</a></nav>
+    <nav class="market-nav"><a href="#market-overview">Market Overview</a><a href="#valuation-calculator">Valuation Calculator</a><a href="#market-statistics">Market Statistics</a><a href="#nse-deals">Large Deals</a><a href="#search-form">Stock Research</a><a href="#peer-section">Peer Comparison</a><a href="#watchlist">Watchlist</a><a href="#how-it-works">Methodology</a></nav>
     <main>
       <section id="market-overview" class="market-board">
         <aside aria-label="StockSahi creator" style="display:flex;align-items:center;gap:14px;padding:14px 16px;margin:0 0 22px;background:linear-gradient(110deg,#f0ecfa,#faf9ff);border:1px solid #e2dcef;border-radius:14px">
@@ -47,10 +47,19 @@
           </div>
         </aside>
         <h1>Market Overview</h1>
-        <div id="market-pulse" class="feature-grid" hidden></div>
+        <h2>Market Pulse</h2><div id="market-pulse" class="feature-grid" aria-live="polite">Index data load ho raha hai…</div>
         <div id="market-indices" class="index-strip" aria-label="Market indices"></div>
         <div id="market-detail" class="market-detail" aria-live="polite">Market data load ho raha hai…</div>
         <p class="market-source">Source: Yahoo Finance · Delayed data · Daily closes</p>
+      </section>
+      <section id="valuation-calculator" class="market-board valuation-tool">
+        <h2>Valuation Calculator</h2>
+        <p class="section-sub">Assumed EPS × P/E se implied price dekhein.</p>
+        <div class="feature-grid">
+          <label>Assumed EPS (₹)<input id="home-eps" type="number" min="0.01" step="any" inputmode="decimal"></label>
+          <label>Assumed P/E<input id="home-pe" type="number" min="0.01" step="any" inputmode="decimal"></label>
+          <div class="feature-tile"><span>Implied price</span><output id="home-price" aria-live="polite">Enter EPS and P/E</output></div>
+        </div>
       </section>
       <section id="market-statistics" class="market-board" aria-labelledby="market-stat-title">
         <style>
@@ -129,7 +138,7 @@
     </main>
     <footer class="footer"><span>© 2026 StockSahi India · Personal research dashboard · Shaikh Takbir Ahammed</span><span>Data: Yahoo Finance (may be delayed) · No guaranteed returns</span></footer>
   </div>
-  <script src="/static/app.js" defer></script>
+  <script src="/static/app.js?v=11" defer></script>
   <script src="/static/market-statistics.js" defer></script>
 </body>
 </html>
