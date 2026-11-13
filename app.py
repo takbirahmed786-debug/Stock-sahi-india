@@ -59,6 +59,21 @@ def search():
         return jsonify({'error': 'Company lookup temporarily unavailable. NSE symbol .NS use karein.'}), 503
 
 
+@app.get('/api/market-statistics')
+def market_statistics():
+    def fetch():
+        with urlopen('https://www.nseindia.com/api/NextApi/apiClient?functionName=getMarketStatistics', timeout=8) as response:
+            data = json.load(response)['data']
+        if not data.get('asOnDate') or not data.get('snapshotCapitalMarket'):
+            raise ValueError('Incomplete NSE market statistics')
+        return data
+
+    try:
+        return jsonify(cached('market-statistics', 60, fetch))
+    except (OSError, ValueError, KeyError, TypeError):
+        return jsonify({'error': 'NSE feed temporarily unavailable'}), 503
+
+
 @app.get('/api/nse-deals')
 def nse_deals():
     def fetch():

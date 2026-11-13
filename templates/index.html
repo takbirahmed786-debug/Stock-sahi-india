@@ -62,19 +62,19 @@
           .market-stat-grid dd{margin:5px 0 0;color:var(--stat);font-size:clamp(16px,2vw,23px);font-weight:800;overflow-wrap:anywhere}
           @media(max-width:650px){.market-stat-grid div,.market-stat-grid div:nth-child(n+9){grid-column:span 6}}
         </style>
-        <header><h2 id="market-stat-title">Market Statistics</h2><span class="market-source">Saved snapshot · 13 Nov 2026, 4:00 PM IST</span></header>
+        <header><h2 id="market-stat-title">Market Statistics</h2><span class="market-source" id="market-stat-time">Saved snapshot · 13 Nov 2026, 4:00 PM IST</span></header>
         <dl class="market-stat-grid">
-          <div style="--stat:#51408b"><dt>Stocks traded</dt><dd>3,721</dd></div>
-          <div style="--stat:#22724e"><dt>Advances</dt><dd>1,445</dd></div>
-          <div style="--stat:#a8313f"><dt>Declines</dt><dd>2,179</dd></div>
-          <div style="--stat:#875014"><dt>Unchanged</dt><dd>97</dd></div>
-          <div style="--stat:#22724e"><dt>52-week high</dt><dd>102</dd></div>
-          <div style="--stat:#a8313f"><dt>52-week low</dt><dd>29</dd></div>
-          <div style="--stat:#22724e"><dt>Upper circuit</dt><dd>110</dd></div>
-          <div style="--stat:#a8313f"><dt>Lower circuit</dt><dd>96</dd></div>
-          <div style="--stat:#51408b"><dt>Registered client accounts</dt><dd>27,67,06,897</dd></div>
-          <div style="--stat:#51408b"><dt>Market capitalization</dt><dd>₹505.70 lakh crore</dd></div>
-          <div style="--stat:#51408b"><dt>Avg. order ack. latency</dt><dd>804 ns</dd></div>
+          <div style="--stat:#51408b"><dt>Stocks traded</dt><dd data-market-stat="total">3,721</dd></div>
+          <div style="--stat:#22724e"><dt>Advances</dt><dd data-market-stat="advances">1,445</dd></div>
+          <div style="--stat:#a8313f"><dt>Declines</dt><dd data-market-stat="declines">2,179</dd></div>
+          <div style="--stat:#875014"><dt>Unchanged</dt><dd data-market-stat="unchange">97</dd></div>
+          <div style="--stat:#22724e"><dt>52-week high</dt><dd data-market-stat="high">102</dd></div>
+          <div style="--stat:#a8313f"><dt>52-week low</dt><dd data-market-stat="low">29</dd></div>
+          <div style="--stat:#22724e"><dt>Upper circuit</dt><dd data-market-stat="upper">110</dd></div>
+          <div style="--stat:#a8313f"><dt>Lower circuit</dt><dd data-market-stat="lower">96</dd></div>
+          <div style="--stat:#51408b"><dt>Registered client accounts</dt><dd data-market-stat="accounts">27,67,06,897</dd></div>
+          <div style="--stat:#51408b"><dt>Market capitalization</dt><dd data-market-stat="cap">₹505.70 lakh crore</dd></div>
+          <div style="--stat:#51408b"><dt>Saved order ack. latency (13 Nov)</dt><dd>804 ns</dd></div>
         </dl>
         <p class="market-source">Source: NSE screenshot · <a href="https://www.nseindia.com/" target="_blank" rel="noopener noreferrer">View latest on NSE ↗</a></p>
       </section>
@@ -129,5 +129,6 @@
     <footer class="footer"><span>© 2026 StockSahi India · Personal research dashboard · Shaikh Takbir Ahammed</span><span>Data: Yahoo Finance (may be delayed) · No guaranteed returns</span></footer>
   </div>
   <script src="/static/app.js" defer></script>
+  <script src="/static/market-statistics.js" defer></script>
 </body>
 </html>
