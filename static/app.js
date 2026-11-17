@@ -107,6 +107,11 @@ const list = (arr,type) => arr && arr.length ? `<ul class="notes-list ${type||''
 async function renderPeers(r, target, dataPromise) {
   try {
     const data = await dataPromise;
+    if (r === currentReport && target === byId('peer-comparison')) {
+      reportEl.querySelectorAll('[data-ratio]').forEach(node => {
+        node.innerHTML = ratioIndicator(ratioGuide(Number(node.dataset.ratio), r.metrics, data.benchmarks, /bank|financial services/i.test((data.industry||'')+' '+(r.industry||'')+' '+(r.sector||''))));
+      });
+    }
     if (r !== currentReport || target !== byId('peer-comparison')) return;
     if (!data.industry) {
       target.textContent = 'Is stock ke liye peer group available nahi hai. Valuation verify karne ke baad hi entry consider karein.';
@@ -234,6 +239,40 @@ dealSection.addEventListener('toggle', () => {
   }
 });
 
+function ratioGuide(index, m, benchmarks = {}, bank = false) {
+  const keys = ['revenue_cagr','profit_cagr','roe','roce','debt_equity','operating_margin',
+    'trailing_pe','eps','price_to_book','operating_cash_flow','free_cash_flow','current_ratio'];
+  const key = keys[index], value = m[key];
+  const neutral = text => ['neutral','—',text];
+  const rated = (ok, text) => [ok?'good':'bad',ok?'▲':'▼',text];
+  if (index === 6 || index === 8) {
+    const median = benchmarks[key]?.median;
+    if (!isNum(value) || value <= 0 || !isNum(median) || median <= 0)
+      return neutral('Reference: industry peer median');
+    const label = 'Peer median '+nfmt(median,1)+'×';
+    const gap = value/median-1;
+    return Math.abs(gap) <= 0.15 ? neutral(label+' · Near peers') :
+      [gap>0?'watch':'neutral',gap>0?'▲':'▼',label+(gap>0?' · Premium':' · Discount')];
+  }
+  if (bank && [4,5,9,10,11].includes(index)) return neutral('Compare using bank-specific metrics');
+  const references = ['≥ 10%','≥ 10%','≥ 15%','≥ 15%','0–1×','≥ 15%',null,'Positive EPS',null,
+    'Positive cash flow','Positive cash flow','≥ 1.5×'];
+  const ref = 'Guide: '+references[index];
+  if (!isNum(value)) return neutral(ref);
+  if ([7,9,10].includes(index)) return value===0?neutral(ref):rated(value>0,ref);
+  if (index===4) {
+    if (value<0) return ['watch','!', 'Check equity · Negative D/E'];
+    return value<=1 ? ['good','▼',ref+' · Low debt ratio'] : ['watch','▲',ref+' · Higher debt ratio'];
+  }
+  if (index===11) return value>=1.5?rated(true,ref):value<1?rated(false,ref):['watch','▼',ref+' · Thin buffer'];
+  const minimum=index<2?10:15;
+  return value>=minimum?rated(true,ref):value<0?rated(false,ref):['watch','▼',ref+' · Below guide'];
+}
+
+function ratioIndicator([tone, arrow, reference]) {
+  return '<span class="ratio-arrow '+tone+'" aria-hidden="true">'+arrow+'</span><span class="ratio-ref '+tone+'">'+esc(reference)+'</span>';
+}
+
 function renderReport(r){
   const daily = r.daily_change;
   const direction = isNum(daily) && daily !== 0 ? (daily > 0 ? 'up' : 'down') : 'flat';
@@ -270,7 +309,7 @@ function renderReport(r){
 
   <div class="report-grid">
     <article class="report-card"><h3>Financial health score</h3><div class="section-sub">Rules-based weightage, 100-point scale</div>${s.categories.map(c=>`<div class="score-row"><label>${esc(c.label)}</label><div class="bar-track"><div class="bar-fill" style="width:${isNum(c.score)?c.score:0}%"></div></div><div class="score-value">${isNum(c.score)?Math.round(c.score):'N/A'}</div></div>`).join('')}<div class="chart-footer">Note: Missing metric score mein zero nahi lagaya. Available groups ke basis par weight adjust hota hai.</div></article>
-    <article class="report-card"><h3>Key financial ratios</h3><div class="section-sub">Actual available financial values</div><div class="metric-grid">${metrics.map(x=>metric(...x)).join('')}</div></article>
+    <article class="report-card"><h3>Key financial ratios</h3><div class="section-sub">Screening guides · thresholds vary by industry</div><div class="metric-grid">${metrics.map(([label,value,hint],i)=>'<div class="metric ratio-card"><div class="metric-label">'+esc(label)+'</div><div class="metric-value">'+esc(value)+'<span class="ratio-indicator" data-ratio="'+i+'">'+ratioIndicator(ratioGuide(i,m,{},/bank|financial services/i.test((r.industry||'')+' '+(r.sector||''))))+'</span></div><div class="metric-hint">'+esc(hint)+'</div></div>').join('')}</div></article>
   </div>
   <article class="report-card chart-card"><h3>Trading volume</h3>${tradingVolume(r.daily_volume)}</article>
   <article class="report-card chart-card"><div class="chart-top"><div><h3>Share price history</h3><div class="section-sub">Past closing prices · adjusted for neither dividends nor total return</div></div>${tabs}</div><div class="chart-container" id="price-chart"></div>${priceTrend(r.price_history)}<div class="chart-footer">Historical price chart sirf context ke liye hai, future growth ki guarantee nahi.</div></article>
@@ -294,6 +333,7 @@ function renderReport(r){
   `;
   setupValuation(r);
   resetPeers(r);
+  loadPeers();
   syncWatchlistButton(r);
   byId('save-stock').addEventListener('click', () => toggleWatchlist(r));
   byId('print-report').addEventListener('click',()=>window.print());
