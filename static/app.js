@@ -565,3 +565,31 @@ function setupValuation(report, prefix = 'calc') {
 }
 
 setupValuation({metrics:{},currency:'INR'}, 'home');
+
+function symbolFromStockLink(value) {
+  let url;
+  try { url = new URL(value); } catch { return null; }
+  if (url.protocol !== 'https:' || url.username || url.password) return null;
+  const host = url.hostname.replace(/^www\./,'');
+  const path = url.pathname.split('/').filter(Boolean);
+  let symbol;
+  if (host === location.hostname) symbol = url.searchParams.get('symbol');
+  else if (host === 'nseindia.com' && path.join('/') === 'get-quotes/equity') {
+    const ticker = url.searchParams.get('symbol');
+    if (ticker) symbol = ticker + '.NS';
+  } else if (host === 'finance.yahoo.com' && path[0] === 'quote') symbol = path[1];
+  else if (host === 'google.com' && path[0] === 'finance' && path[1] === 'quote') {
+    const match = path[2]?.match(/^([\w&-]+):(NSE|BOM)$/i);
+    if (match) symbol = match[1] + (match[2].toUpperCase() === 'NSE' ? '.NS' : '.BO');
+  }
+  try { symbol = decodeURIComponent(symbol || '').toUpperCase(); } catch { return null; }
+  return /^[A-Z0-9_-]{1,24}\.(NS|BO)$/.test(symbol) ? symbol : null;
+}
+byId('stock-link-form')?.addEventListener('submit', event => {
+  event.preventDefault();
+  const symbol = symbolFromStockLink(byId('stock-link-input').value.trim());
+  byId('stock-link-status').textContent = symbol
+    ? 'Opening ' + symbol + '…'
+    : 'Supported NSE/BSE stock link paste karein, ya company ka symbol search karein.';
+  if (symbol) loadReport(symbol);
+});

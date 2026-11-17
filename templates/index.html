@@ -35,7 +35,7 @@
 
     </header>
 
-    <nav class="market-nav"><a href="#market-overview">Market Overview</a><a href="#valuation-calculator">Valuation Calculator</a><a href="#market-statistics">Market Statistics</a><a href="#nse-deals">Large Deals</a><a href="#search-form">Stock Research</a><a href="#peer-section">Peer Comparison</a><a href="#watchlist">Watchlist</a><a href="#how-it-works">Methodology</a></nav>
+    <nav class="market-nav"><a href="#market-overview">Market Overview</a><a href="#stock-link">Paste Stock Link</a><a href="#valuation-calculator">Valuation Calculator</a><a href="#market-statistics">Market Statistics</a><a href="#nse-deals">Large Deals</a><a href="#search-form">Stock Research</a><a href="#peer-section">Peer Comparison</a><a href="#watchlist">Watchlist</a><a href="#how-it-works">Methodology</a></nav>
     <main>
       <section id="market-overview" class="market-board">
         <aside aria-label="StockSahi creator" style="display:flex;align-items:center;gap:14px;padding:14px 16px;margin:0 0 22px;background:linear-gradient(110deg,#f0ecfa,#faf9ff);border:1px solid #e2dcef;border-radius:14px">
@@ -51,6 +51,15 @@
         <div id="market-indices" class="index-strip" aria-label="Market indices"></div>
         <div id="market-detail" class="market-detail" aria-live="polite">Market data load ho raha hai…</div>
         <p class="market-source">Source: Yahoo Finance · Delayed data · Daily closes</p>
+      </section>
+      <section id="stock-link" class="market-board valuation-tool">
+        <h2>Analyze from a stock link</h2>
+        <p class="section-sub">Paste a StockSahi, NSE, Yahoo Finance or Google Finance stock link.</p>
+        <form id="stock-link-form" class="feature-grid">
+          <label>Stock link<input id="stock-link-input" type="url" inputmode="url" maxlength="2048" placeholder="https://finance.yahoo.com/quote/TCS.NS/" required></label>
+          <button class="search-btn" type="submit">Open stock report</button>
+        </form>
+        <p id="stock-link-status" role="status"></p>
       </section>
       <section id="valuation-calculator" class="market-board valuation-tool">
         <h2>Valuation Calculator</h2>
@@ -138,7 +147,7 @@
     </main>
     <footer class="footer"><span>© 2026 StockSahi India · Personal research dashboard · Shaikh Takbir Ahammed</span><span>Data: Yahoo Finance (may be delayed) · No guaranteed returns</span></footer>
   </div>
-  <script src="/static/app.js?v=11" defer></script>
+  <script src="/static/app.js?v=12" defer></script>
   <script src="/static/market-statistics.js" defer></script>
 </body>
 </html>
