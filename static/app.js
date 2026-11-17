@@ -328,10 +328,17 @@ function renderReport(r){
       <div class="feature-tile"><span>Implied price</span><output id="calc-price" aria-live="polite"></output></div>
     </div>
   </article>
+  <article class="report-card chart-card valuation-tool">
+    <h3>Future Scenario Lab</h3>
+    <p class="section-sub">Edit EPS growth and exit P/E for each case. Outputs are hypothetical and exclude dividends, fees and taxes.</p>
+    <div id="scenario-lab" class="feature-grid"></div>
+    <p><a href="https://www.nseindia.in/companies-listing/corporate-filings-announcements" target="_blank" rel="noopener noreferrer">Check official NSE filings</a></p>
+  </article>
   <article class="report-card chart-card"><h3>Verify before investing</h3><div class="section-sub">Jo cheezein automated ratio analysis se confirm nahi hotin</div>${list(r.cautions,'neutral')}</article>
   <article class="report-card chart-card"><h3>Data source & calculation</h3><p style="font-size:12px;color:#718696;line-height:1.8">${esc(r.methodology)}<br>Report generated: ${esc(new Date(r.fetched_at).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',dateStyle:'medium',timeStyle:'short'}))} IST. Delayed price, incomplete statements, restatements aur sector differences ho sakte hain.</p><div class="sources"><a href="${esc(r.source_url)}" target="_blank" rel="noopener noreferrer">Yahoo Finance source ↗</a><a href="https://www.nseindia.com/companies-listing/corporate-filings-financial-results" target="_blank" rel="noopener noreferrer">NSE official financial filings ↗</a><a href="https://www.bseindia.com/" target="_blank" rel="noopener noreferrer">BSE official filings ↗</a></div></article>
   `;
   setupValuation(r);
+  setupScenarioLab(r);
   resetPeers(r);
   loadPeers();
   syncWatchlistButton(r);
@@ -734,3 +741,34 @@ byId('stock-link-form')?.addEventListener('submit', event => {
       .map(([label,n])=>'<div class="feature-tile"><span>'+label+'</span><strong>'+money(n)+'</strong></div>').join('');
   });
 })();
+function setupScenarioLab(report) {
+  const panel = byId('scenario-lab');
+  const {eps,trailing_pe:pe} = report.metrics;
+  if (!isNum(eps) || eps <= 0 || !isNum(report.price) || report.price <= 0) {
+    panel.textContent = 'Positive trailing EPS and a valid close are required for P/E scenarios.';
+    return;
+  }
+  const cases = [['Bear',-10,0.8],['Base',5,1],['Bull',15,1.2]];
+  cases.forEach(([name,growth,multiple],i)=>{
+    const card = document.createElement('div');
+    card.className = 'feature-tile';
+    card.innerHTML = '<strong>'+name+'</strong><label>Annual EPS growth (%)<input type="number" min="-99" max="200" step="any" value="'+growth+'"></label>'+
+      '<label>Exit P/E (×)<input type="number" min="0.01" max="500" step="any"></label>'+
+      '<label>Horizon<select><option value="1">1 year</option><option value="3">3 years</option><option value="5">5 years</option></select></label>'+
+      '<output aria-live="polite"></output>';
+    panel.append(card);
+    const [rate,exit] = card.querySelectorAll('input');
+    const years = card.querySelector('select'), output = card.querySelector('output');
+    if (isNum(pe) && pe > 0) exit.value = Math.min(500,Math.max(0.01,pe*multiple)).toFixed(2);
+    const render = () => {
+      const price = eps * (1+rate.valueAsNumber/100)**Number(years.value) * exit.valueAsNumber;
+      const upside = (price/report.price-1)*100;
+      output.textContent = rate.validity.valid && exit.validity.valid && isNum(price)
+        ? priceFmt(price,report)+' · '+signed(upside)+' vs latest close'
+        : 'Enter valid growth and exit P/E.';
+      output.className = isNum(price)&&rate.validity.valid&&exit.validity.valid ? (upside<0?'financial-amount weak':'financial-amount strong') : '';
+    };
+    card.addEventListener('input',render);
+    render();
+  });
+}
