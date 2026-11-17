@@ -5,7 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 from statistics import median
 import json
 from pathlib import Path
-from urllib.request import urlopen
+from urllib.request import Request, urlopen
 import os
 import re
 import threading
@@ -62,11 +62,17 @@ def search():
 @app.get('/api/market-statistics')
 def market_statistics():
     def fetch():
-        with urlopen('https://www.nseindia.com/api/NextApi/apiClient?functionName=getMarketStatistics', timeout=8) as response:
-            data = json.load(response)['data']
-        if not data.get('asOnDate') or not data.get('snapshotCapitalMarket'):
-            raise ValueError('Incomplete NSE market statistics')
-        return data
+        endpoint = '/api/NextApi/apiClient?functionName=getMarketStatistics'
+        for host in ('www.nseindia.com', 'www.nseindia.in'):
+            try:
+                request_data = Request('https://' + host + endpoint, headers={'Accept': 'application/json'})
+                with urlopen(request_data, timeout=5) as response:
+                    data = json.load(response)['data']
+                if data.get('asOnDate') and data.get('snapshotCapitalMarket'):
+                    return data
+            except (OSError, ValueError, KeyError, TypeError, AttributeError):
+                app.logger.info('Market statistics unavailable from %s', host)
+        raise ValueError('NSE market statistics unavailable')
 
     try:
         return jsonify(cached('market-statistics', 60, fetch))
@@ -111,7 +117,22 @@ def index_history(item):
         if len(points) < 2:
             return {'name': name, 'points': []}
         last = rows.iloc[-1]
-        return {'name': name, 'points': points, 'open': round(float(last.Open), 2),
+        intraday = None
+        try:
+            bars = yf.Ticker(symbol).history(period='1d', interval='5m', auto_adjust=False, timeout=5)
+            bars = bars.dropna(subset=['Close', 'Open', 'High', 'Low'])
+            if not bars.empty:
+                stamp = bars.index[-1].tz_convert('Asia/Kolkata')
+                day = stamp.date().isoformat()
+                previous = next((point['close'] for point in reversed(points) if point['date'] < day), None)
+                if day >= points[-1]['date'] and previous and previous > 0:
+                    session = bars[bars.index.tz_convert('Asia/Kolkata').date == stamp.date()]
+                    intraday = {'date': day, 'time': stamp.strftime('%H:%M IST'), 'last': float(session.Close.iloc[-1]),
+                                'prior': previous, 'open': float(session.Open.iloc[0]),
+                                'high': float(session.High.max()), 'low': float(session.Low.min())}
+        except Exception:
+            app.logger.info('Intraday data unavailable for %s', symbol)
+        return {'name': name, 'intraday': intraday, 'points': points, 'open': round(float(last.Open), 2),
                 'high': round(float(last.High), 2), 'low': round(float(last.Low), 2)}
     except Exception:
         app.logger.warning('Index history unavailable for %s', symbol)
@@ -123,7 +144,7 @@ def market_overview():
     def build():
         with ThreadPoolExecutor(max_workers=4) as pool:
             return list(pool.map(index_history, INDICES.items()))
-    return jsonify(cached('market-overview', 300, build))
+    return jsonify(cached('market-overview', 60, build))
 
 
 @app.get('/api/report')

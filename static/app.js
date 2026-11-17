@@ -417,23 +417,27 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
 const off=byId('offline-note');
 if (off) {off.hidden=navigator.onLine;window.addEventListener('offline',()=>{off.hidden=false});window.addEventListener('online',()=>{off.hidden=true});}
 
+let marketBusy = false, selectedIndexName, marketRange = 22;
 async function showMarket() {
+  if (marketBusy || document.hidden) return;
+  marketBusy = true;
   const strip = byId('market-indices');
   const detail = byId('market-detail');
   try {
     const indices = await getJSON('/api/market-overview');
-    let selected = indices.findIndex(index => index.points.length >= 2);
-    let range = 22;
+    let selected = indices.findIndex(index => index.name === selectedIndexName && index.points.length >= 2);
+    if (selected < 0) selected = indices.findIndex(index => index.points.length >= 2);
+    let range = marketRange;
     const change = index => {
-      const last = index.points.at(-1).close;
-      const prior = index.points.at(-2).close;
+      const last = index.intraday?.last ?? index.points.at(-1).close;
+      const prior = index.intraday?.prior ?? index.points.at(-2).close;
       return {last, amount:last-prior, percent:(last/prior-1)*100};
     };
     const available = indices.filter(index => index.points.length >= 2);
     const pulse = byId('market-pulse');
     if (available.length) {
-      const latestDate = available.map(index => index.points.at(-1).date).sort().at(-1);
-      const recent = available.filter(index => index.points.at(-1).date === latestDate);
+      const latestDate = available.map(index => (index.intraday?.date ?? index.points.at(-1).date)).sort().at(-1);
+      const recent = available.filter(index => (index.intraday?.date ?? index.points.at(-1).date) === latestDate);
       const ranked = recent.map(index => ({name:index.name, ...change(index)})).sort((a,b) => b.percent-a.percent);
       const rising = ranked.filter(index => index.amount > 0).length;
       const falling = ranked.filter(index => index.amount < 0).length;
@@ -471,29 +475,33 @@ async function showMarket() {
       }).join('');
       detail.innerHTML = '<div class="market-quote"><div><h2>'+esc(index.name)+'</h2><strong>'+nfmt(quote.last,2)+'</strong><p class="'+(quote.amount<0?'down':'up')+'">'+
         (quote.amount>0?'+':'')+nfmt(quote.amount,2)+' ('+signed(quote.percent)+')</p></div>'+
-        [['Open',index.open],['High',index.high],['Low',index.low]].map(([label,v])=>'<div><span>'+label+'</span><strong>'+nfmt(v,2)+'</strong></div>').join('')+'</div>'+
-        '<div class="market-chart-bar"><span>Latest session '+esc(points.at(-1).date)+'</span><div class="market-ranges">'+
+        [['Open',index.intraday?.open ?? index.open],['High',index.intraday?.high ?? index.high],['Low',index.intraday?.low ?? index.low]].map(([label,v])=>'<div><span>'+label+'</span><strong>'+nfmt(v,2)+'</strong></div>').join('')+'</div>'+
+        '<div class="market-chart-bar"><span>Latest session '+esc(index.intraday ? index.intraday.date+' '+index.intraday.time+' · 5-min bar' : points.at(-1).date+' · Daily close')+'</span><div class="market-ranges">'+
         [[22,'1M'],[66,'3M'],[132,'6M'],[260,'1Y']].map(([n,label])=>'<button data-range="'+n+'" aria-pressed="'+(n===range)+'">'+label+'</button>').join('')+'</div></div>'+
         '<svg class="market-chart" viewBox="0 0 900 250" role="img" aria-label="'+esc(index.name)+' daily close history"><defs><linearGradient id="index-fill" x2="0" y2="1"><stop stop-color="#6ca9d2" stop-opacity=".65"/><stop offset="1" stop-color="#eaf6fc"/></linearGradient></defs>'+
         grid+'<polygon points="60,220 '+coords.join(' ')+' 880,220" fill="url(#index-fill)"/>'+
         '<polyline points="'+coords.join(' ')+'" fill="none" stroke="#413581" stroke-width="2" vector-effect="non-scaling-stroke"/>'+
         '<text x="60" y="244">'+esc(points[0].date)+'</text><text x="880" y="244" text-anchor="end">'+esc(points.at(-1).date)+'</text></svg>';
     };
-    strip.addEventListener('click',event=>{
+    strip.onclick = event=>{
       const button = event.target.closest('[data-index]');
-      if (button) {selected = Number(button.dataset.index);render();}
-    });
-    detail.addEventListener('click',event=>{
+      if (button) {selected = Number(button.dataset.index);selectedIndexName = indices[selected].name;render();}
+    };
+    detail.onclick = event=>{
       const button = event.target.closest('[data-range]');
-      if (button) {range = Number(button.dataset.range);render();}
-    });
+      if (button) {range = marketRange = Number(button.dataset.range);render();}
+    };
     render();
   } catch {
     byId('market-pulse').textContent = 'Market Pulse data abhi load nahi hua.';
     detail.textContent = 'Index data abhi load nahi hua. Thodi der baad refresh karein.';
+  } finally {
+    marketBusy = false;
   }
 }
 showMarket();
+setInterval(showMarket, 60000);
+document.addEventListener('visibilitychange', showMarket);
 document.querySelector('.market-nav a[href="#nse-deals"]').addEventListener('click',()=>{
   byId('nse-deals').open = true;
 });
