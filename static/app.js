@@ -593,3 +593,104 @@ byId('stock-link-form')?.addEventListener('submit', event => {
     : 'Supported NSE/BSE stock link paste karein, ya company ka symbol search karein.';
   if (symbol) loadReport(symbol);
 });
+
+(() => {
+  const form = byId('holding-form'), status = byId('portfolio-status');
+  if (!form) return;
+  const money = value => isNum(value) ? '₹'+nfmt(value,2) : '—';
+  const storageKey = 'stocksahi-holdings';
+  let holdings = [];
+  const quotes = new Map();
+  try {
+    const value = JSON.parse(localStorage.getItem(storageKey) || '[]');
+    if (Array.isArray(value)) holdings = value.filter(row => typeof row.symbol==='string' && row.quantity>0 && row.cost>0);
+  } catch {}
+  function save(rows) {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(rows));
+      holdings = rows;
+      draw();
+      return true;
+    } catch {
+      status.textContent = 'Holdings save nahi ho saki.';
+      return false;
+    }
+  }
+  function draw() {
+    const invested = holdings.reduce((sum,row)=>sum+row.quantity*row.cost,0);
+    const priced = holdings.filter(row=>quotes.has(row.symbol));
+    const complete = holdings.length && priced.length===holdings.length;
+    const value = complete ? priced.reduce((sum,row)=>sum+row.quantity*quotes.get(row.symbol).price,0) : null;
+    const tiles = [['Invested',invested],['Market value',value],['Unrealized P&L',complete?value-invested:null]];
+    byId('portfolio-rows').innerHTML = '<div class="feature-grid">'+tiles.map(([label,n])=>
+      '<div class="feature-tile"><span>'+label+'</span><strong>'+money(n)+'</strong></div>').join('')+'</div>'+
+      (holdings.length ? '<div class="table-wrap"><table class="financial-table"><thead><tr><th>Symbol</th><th>Qty</th><th>Avg. buy</th><th>Latest close</th><th>P&amp;L</th><th>Action</th></tr></thead><tbody>'+
+      holdings.map((row,index)=>{
+        const quote=quotes.get(row.symbol);
+        const pnl=quote ? (quote.price-row.cost)*row.quantity : null;
+        return '<tr><td>'+esc(row.symbol)+'</td><td>'+row.quantity+'</td><td>'+money(row.cost)+'</td><td>'+money(quote?.price)+
+          (quote?' <small>'+esc(quote.date)+'</small>':'')+'</td><td class="financial-amount '+(pnl>0?'strong':pnl<0?'weak':'')+'">'+money(pnl)+
+          '</td><td><button type="button" data-holding-edit="'+index+'">Edit</button> <button type="button" data-holding-remove="'+index+'">Remove</button></td></tr>';
+      }).join('')+'</tbody></table></div>' : '<p>Add a stock to start tracking.</p>');
+  }
+  form.addEventListener('submit', event=>{
+    event.preventDefault();
+    const input=byId('holding-symbol').value.trim().toUpperCase();
+    const symbol=input.includes('.')?input:input+'.NS';
+    if (!/^[A-Z0-9_-]{1,24}\.(NS|BO)$/.test(symbol)) {
+      status.textContent='Valid NSE/BSE symbol daalein, jaise TCS.NS.';
+      return;
+    }
+    const row={symbol,quantity:byId('holding-qty').valueAsNumber,cost:byId('holding-cost').valueAsNumber};
+    if (save([...holdings.filter(item=>item.symbol!==symbol),row])) {
+      form.reset();
+      status.textContent='Holding saved.';
+    }
+  });
+  byId('portfolio-rows').addEventListener('click',event=>{
+    const button=event.target.closest('button');
+    if (!button) return;
+    const row=holdings[Number(button.dataset.holdingEdit ?? button.dataset.holdingRemove)];
+    if (!row) return;
+    if (button.hasAttribute('data-holding-remove')) { save(holdings.filter(item=>item!==row)); return; }
+    byId('holding-symbol').value=row.symbol;
+    byId('holding-qty').value=row.quantity;
+    byId('holding-cost').value=row.cost;
+    byId('holding-qty').focus();
+  });
+  byId('portfolio-refresh').addEventListener('click',async event=>{
+    const button=event.currentTarget;
+    if (!holdings.length) return;
+    button.disabled=true;
+    status.textContent='Loading latest available closes…';
+    const symbols=holdings.map(row=>row.symbol);
+    try {
+      for(let i=0;i<symbols.length;i+=3){
+        await Promise.allSettled(symbols.slice(i,i+3).map(async symbol=>{
+          quotes.delete(symbol);
+          const report=await getJSON('/api/report?symbol='+encodeURIComponent(symbol));
+          if(isNum(report.price)&&report.price>0)quotes.set(symbol,{price:report.price,date:report.quote_date});
+        }));
+        draw();
+      }
+    } finally {
+      const count=holdings.filter(row=>quotes.has(row.symbol)).length;
+      status.textContent=count+' of '+holdings.length+' holdings priced. Quotes may be delayed.';
+      button.disabled=false;
+    }
+  });
+  draw();
+  byId('investment-form').addEventListener('submit',event=>{
+    event.preventDefault();
+    const amount=byId('investment-amount').valueAsNumber;
+    const annual=byId('investment-rate').valueAsNumber/100;
+    const years=byId('investment-years').valueAsNumber;
+    const sip=byId('investment-mode').value==='sip';
+    const months=years*12;
+    const monthly=Math.expm1(Math.log1p(annual)/12);
+    const invested=sip?amount*months:amount;
+    const projected=sip?(monthly===0?invested:amount*Math.expm1(months*Math.log1p(monthly))/monthly):amount*(1+annual)**years;
+    byId('investment-result').innerHTML=[['Invested',invested],['Projected value',projected],['Estimated gain/loss',projected-invested]]
+      .map(([label,n])=>'<div class="feature-tile"><span>'+label+'</span><strong>'+money(n)+'</strong></div>').join('');
+  });
+})();

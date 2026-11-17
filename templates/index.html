@@ -35,7 +35,7 @@
 
     </header>
 
-    <nav class="market-nav"><a href="#market-overview">Market Overview</a><a href="#stock-link">Paste Stock Link</a><a href="#valuation-calculator">Valuation Calculator</a><a href="#market-statistics">Market Statistics</a><a href="#nse-deals">Large Deals</a><a href="#search-form">Stock Research</a><a href="#peer-section">Peer Comparison</a><a href="#watchlist">Watchlist</a><a href="#how-it-works">Methodology</a></nav>
+    <nav class="market-nav"><a href="#market-overview">Market Overview</a><a href="#stock-link">Paste Stock Link</a><a href="#valuation-calculator">Valuation Calculator</a><a href="#market-statistics">Market Statistics</a><a href="#nse-deals">Large Deals</a><a href="#search-form">Stock Research</a><a href="#peer-section">Peer Comparison</a><a href="#portfolio">Portfolio</a><a href="#investment-tools">Investment Tools</a><a href="#watchlist">Watchlist</a><a href="#how-it-works">Methodology</a></nav>
     <main>
       <section id="market-overview" class="market-board">
         <aside aria-label="StockSahi creator" style="display:flex;align-items:center;gap:14px;padding:14px 16px;margin:0 0 22px;background:linear-gradient(110deg,#f0ecfa,#faf9ff);border:1px solid #e2dcef;border-radius:14px">
@@ -125,6 +125,27 @@
         </div>
         <div id="peer-comparison" aria-live="polite"><p>Upar se stock search karein, phir uske industry peers compare karein.</p></div>
       </section>
+      <section id="portfolio" class="market-board valuation-tool">
+        <h2>My Portfolio</h2><p>Holdings isi browser mein save hongi. Latest available prices manually refresh karein.</p>
+        <form id="holding-form" class="feature-grid">
+          <label>NSE/BSE symbol<input id="holding-symbol" placeholder="TCS.NS" maxlength="28" required></label>
+          <label>Quantity<input id="holding-qty" type="number" min="1" step="1" required></label><label>Average buy price (₹)<input id="holding-cost" type="number" min="0.01" step="0.01" required></label>
+          <button type="submit" class="search-btn">Save holding</button>
+        </form>
+        <button id="portfolio-refresh" type="button">Refresh prices</button>
+        <p id="portfolio-status" role="status"></p><div id="portfolio-rows"></div>
+      </section>
+      <section id="investment-tools" class="market-board valuation-tool">
+        <h2>SIP &amp; Lump Sum Calculator</h2><p>Example projection based on your assumed annual return.</p>
+        <form id="investment-form" class="feature-grid">
+          <label>Investment type<select id="investment-mode"><option value="sip">Monthly SIP</option><option value="lump">Lump sum</option></select></label>
+          <label>Amount (₹)<input id="investment-amount" type="number" min="1" step="1" required></label>
+          <label>Assumed annual return (%)<input id="investment-rate" type="number" min="-99" max="100" step="any" value="12" required></label>
+          <label>Years<input id="investment-years" type="number" min="1" max="50" step="1" value="10" required></label>
+          <button type="submit" class="search-btn">Calculate</button>
+        </form><div id="investment-result" class="feature-grid" aria-live="polite"></div>
+        <p class="market-source">SIP assumes contributions at month-end. Taxes and fees excluded.</p>
+      </section>
       <section id="watchlist" class="market-board">
         <h2>My Watchlist</h2>
         <p class="market-source">Is browser mein saved stocks. Symbol par click karke report kholein.</p>
@@ -147,7 +168,7 @@
     </main>
     <footer class="footer"><span>© 2026 StockSahi India · Personal research dashboard · Shaikh Takbir Ahammed</span><span>Data: Yahoo Finance (may be delayed) · No guaranteed returns</span></footer>
   </div>
-  <script src="/static/app.js?v=12" defer></script>
+  <script src="/static/app.js?v=13" defer></script>
   <script src="/static/market-statistics.js" defer></script>
 </body>
 </html>
