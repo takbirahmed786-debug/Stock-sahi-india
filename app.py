@@ -63,10 +63,10 @@ def search():
 def market_statistics():
     def fetch():
         endpoint = '/api/NextApi/apiClient?functionName=getMarketStatistics'
-        for host in ('www.nseindia.com', 'www.nseindia.in'):
+        for host in ('www.nseindia.in', 'www.nseindia.com'):
             try:
                 request_data = Request('https://' + host + endpoint, headers={'Accept': 'application/json'})
-                with urlopen(request_data, timeout=5) as response:
+                with urlopen(request_data, timeout=9) as response:
                     data = json.load(response)['data']
                 if data.get('asOnDate') and data.get('snapshotCapitalMarket'):
                     return data

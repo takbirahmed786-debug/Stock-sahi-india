@@ -3,13 +3,16 @@
   const source = document.querySelector('#market-statistics > p.market-source');
   if (!timestamp || !source) return;
   let busy = false;
+  const savedTimestamp = timestamp.textContent;
   let lastUpdate = '';
   const format = new Intl.NumberFormat('en-IN', {maximumFractionDigits: 2});
   async function refresh() {
     if (busy || document.hidden) return;
     busy = true;
+    const controller = new AbortController();
+    const deadline = setTimeout(() => controller.abort(), 25000);
     try {
-      const response = await fetch('/api/market-statistics', {cache:'no-store', signal:AbortSignal.timeout(12000)});
+      const response = await fetch('/api/market-statistics', {cache:'no-store', signal:controller.signal});
       if (!response.ok) throw new Error('NSE feed unavailable');
       const data = await response.json();
       if (!data.asOnDate || !data.snapshotCapitalMarket) throw new Error('Missing NSE data');
@@ -24,8 +27,9 @@
       source.firstChild.textContent = 'Source: NSE · ';
     } catch {
       timestamp.textContent = lastUpdate ? 'Last received · ' + lastUpdate + ' IST · Feed unavailable'
-        : 'Saved snapshot · 13 Nov 2026, 4:00 PM IST · Feed unavailable';
+        : savedTimestamp + ' · Feed unavailable';
     } finally {
+      clearTimeout(deadline);
       busy = false;
     }
   }
