@@ -1,6 +1,6 @@
 // Offline app shell only. NEVER store reports or price quotes in the service-worker cache.
-const CACHE = 'stocksahi-shell-v16';
-const APP_SHELL = ['/', '/static/style.css?v=14', '/static/app.js?v=16', '/static/manifest.webmanifest', '/static/icon-192.png', '/static/icon-512.png'];
+const CACHE = 'stocksahi-shell-v17';
+const APP_SHELL = ['/', '/static/style.css?v=14', '/static/app.js?v=17', '/static/manifest.webmanifest', '/static/icon-192.png', '/static/icon-512.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(APP_SHELL)).then(() => self.skipWaiting()));
 });

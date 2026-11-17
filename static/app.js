@@ -739,11 +739,23 @@ byId('stock-link-form')?.addEventListener('submit', event => {
 function setupScenarioLab(report) {
   const panel = byId('scenario-lab');
   panel.replaceChildren();
-  byId('scenario-stock').textContent = report.name + ' · ' + report.symbol;
+  byId('scenario-stock').textContent = report.name && report.name !== report.symbol ? report.name + ' · ' + report.symbol : report.symbol;
   const {eps,trailing_pe:pe} = report.metrics;
-  if (!isNum(eps) || eps <= 0 || !isNum(report.price) || report.price <= 0) {
-    panel.textContent = 'Positive trailing EPS and a valid close are required for P/E scenarios.';
+  if (!isNum(report.price) || report.price <= 0) {
+    panel.textContent = 'A valid closing price is required for P/E scenarios.';
     return;
+  }
+  let manualEps;
+  if (!isNum(eps) || eps <= 0) {
+    const label = document.createElement('label');
+    label.textContent = 'Assumed trailing EPS (quote currency)';
+    manualEps = document.createElement('input');
+    manualEps.type = 'number';
+    manualEps.min = '0.01';
+    manualEps.step = 'any';
+    manualEps.placeholder = 'Enter positive EPS from filings';
+    label.append(manualEps);
+    panel.append(label);
   }
   const cases = [['Bear',-10,0.8],['Base',5,1],['Bull',15,1.2]];
   cases.forEach(([name,growth,multiple],i)=>{
@@ -758,14 +770,16 @@ function setupScenarioLab(report) {
     const years = card.querySelector('select'), output = card.querySelector('output');
     if (isNum(pe) && pe > 0) exit.value = Math.min(500,Math.max(0.01,pe*multiple)).toFixed(2);
     const render = () => {
-      const price = eps * (1+rate.valueAsNumber/100)**Number(years.value) * exit.valueAsNumber;
+      const inputEps = manualEps ? manualEps.valueAsNumber : eps;
+      const price = inputEps > 0 && (!manualEps || manualEps.validity.valid) ? inputEps * (1+rate.valueAsNumber/100)**Number(years.value) * exit.valueAsNumber : NaN;
       const upside = (price/report.price-1)*100;
       output.textContent = rate.validity.valid && exit.validity.valid && isNum(price)
         ? priceFmt(price,report)+' · '+signed(upside)+' vs latest close'
-        : 'Enter valid growth and exit P/E.';
+        : 'Enter positive EPS, valid growth and exit P/E.';
       output.className = isNum(price)&&rate.validity.valid&&exit.validity.valid ? (upside<0?'financial-amount weak':'financial-amount strong') : '';
     };
     card.addEventListener('input',render);
+    manualEps?.addEventListener('input',render);
     render();
   });
 }
