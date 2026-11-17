@@ -35,8 +35,16 @@
 
     </header>
 
-    <nav class="market-nav"><a href="#market-overview">Market Overview</a><a href="#stock-link">Paste Stock Link</a><a href="#valuation-calculator">Valuation Calculator</a><a href="#market-statistics">Market Statistics</a><a href="#nse-deals">Large Deals</a><a href="#search-form">Stock Research</a><a href="#peer-section">Peer Comparison</a><a href="#portfolio">Portfolio</a><a href="#investment-tools">Investment Tools</a><a href="#watchlist">Watchlist</a><a href="#how-it-works">Methodology</a></nav>
+    <nav class="market-nav"><a href="#future-scenarios">Future Scenarios</a><a href="#market-overview">Market Overview</a><a href="#stock-link">Paste Stock Link</a><a href="#valuation-calculator">Valuation Calculator</a><a href="#market-statistics">Market Statistics</a><a href="#nse-deals">Large Deals</a><a href="#search-form">Stock Research</a><a href="#peer-section">Peer Comparison</a><a href="#portfolio">Portfolio</a><a href="#investment-tools">Investment Tools</a><a href="#watchlist">Watchlist</a><a href="#how-it-works">Methodology</a></nav>
     <main>
+      <section id="future-scenarios" class="market-board valuation-tool">
+        <h2>Future Scenario Lab</h2>
+        <p id="scenario-stock">Search a stock above, or pick one below.</p>
+        <div class="popular"><button type="button" data-symbol="TCS.NS">TCS</button><button type="button" data-symbol="INFY.NS">Infosys</button></div>
+        <p class="market-source">Edit EPS growth and exit P/E to see hypothetical prices. Dividends, fees and taxes excluded.</p>
+        <div id="scenario-lab" class="feature-grid" aria-live="polite"></div>
+        <p><a href="https://www.nseindia.in/companies-listing/corporate-filings-announcements" target="_blank" rel="noopener noreferrer">Check official NSE filings ↗</a></p>
+      </section>
       <section id="market-overview" class="market-board">
         <aside aria-label="StockSahi creator" style="display:flex;align-items:center;gap:14px;padding:14px 16px;margin:0 0 22px;background:linear-gradient(110deg,#f0ecfa,#faf9ff);border:1px solid #e2dcef;border-radius:14px">
           <span aria-hidden="true" style="display:grid;place-items:center;flex:0 0 48px;height:48px;border-radius:50%;background:#393171;color:white;font-weight:800;letter-spacing:.04em">ST</span>
@@ -168,7 +176,7 @@
     </main>
     <footer class="footer"><span>© 2026 StockSahi India · Personal research dashboard · Shaikh Takbir Ahammed</span><span>Data: Yahoo Finance (may be delayed) · No guaranteed returns</span></footer>
   </div>
-  <script src="/static/app.js?v=15" defer></script>
+  <script src="/static/app.js?v=16" defer></script>
   <script src="/static/market-statistics.js" defer></script>
 </body>
 </html>

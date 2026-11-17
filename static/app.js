@@ -100,7 +100,7 @@ async function loadReport(symbol){
     currentReport=data;
     renderReport(data);
     reportEl.hidden=false;
-    reportEl.scrollIntoView({behavior:'smooth',block:'start'});
+    (location.hash === '#future-scenarios' ? byId('future-scenarios') : reportEl).scrollIntoView({behavior:'smooth',block:'start'});
   }catch(e){if(current===requestId)showStatus(e.message);}finally{if(current===requestId)setBusy(false);}
 }
 const list = (arr,type) => arr && arr.length ? `<ul class="notes-list ${type||''}">${arr.map(x=>`<li><i>${type==='negative'?'!':type==='neutral'?'i':'✓'}</i><span>${esc(x)}</span></li>`).join('')}</ul>` : `<div class="empty-state">Is category ke liye sufficient verified numbers nahi mile.</div>`;
@@ -328,12 +328,7 @@ function renderReport(r){
       <div class="feature-tile"><span>Implied price</span><output id="calc-price" aria-live="polite"></output></div>
     </div>
   </article>
-  <article class="report-card chart-card valuation-tool">
-    <h3>Future Scenario Lab</h3>
-    <p class="section-sub">Edit EPS growth and exit P/E for each case. Outputs are hypothetical and exclude dividends, fees and taxes.</p>
-    <div id="scenario-lab" class="feature-grid"></div>
-    <p><a href="https://www.nseindia.in/companies-listing/corporate-filings-announcements" target="_blank" rel="noopener noreferrer">Check official NSE filings</a></p>
-  </article>
+  <article class="report-card"><a class="report-peer-link" href="#future-scenarios">Open Future Scenario Lab</a></article>
   <article class="report-card chart-card"><h3>Verify before investing</h3><div class="section-sub">Jo cheezein automated ratio analysis se confirm nahi hotin</div>${list(r.cautions,'neutral')}</article>
   <article class="report-card chart-card"><h3>Data source & calculation</h3><p style="font-size:12px;color:#718696;line-height:1.8">${esc(r.methodology)}<br>Report generated: ${esc(new Date(r.fetched_at).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',dateStyle:'medium',timeStyle:'short'}))} IST. Delayed price, incomplete statements, restatements aur sector differences ho sakte hain.</p><div class="sources"><a href="${esc(r.source_url)}" target="_blank" rel="noopener noreferrer">Yahoo Finance source ↗</a><a href="https://www.nseindia.com/companies-listing/corporate-filings-financial-results" target="_blank" rel="noopener noreferrer">NSE official financial filings ↗</a><a href="https://www.bseindia.com/" target="_blank" rel="noopener noreferrer">BSE official filings ↗</a></div></article>
   `;
@@ -743,6 +738,8 @@ byId('stock-link-form')?.addEventListener('submit', event => {
 })();
 function setupScenarioLab(report) {
   const panel = byId('scenario-lab');
+  panel.replaceChildren();
+  byId('scenario-stock').textContent = report.name + ' · ' + report.symbol;
   const {eps,trailing_pe:pe} = report.metrics;
   if (!isNum(eps) || eps <= 0 || !isNum(report.price) || report.price <= 0) {
     panel.textContent = 'Positive trailing EPS and a valid close are required for P/E scenarios.';
