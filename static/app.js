@@ -273,6 +273,43 @@ function ratioIndicator([tone, arrow, reference]) {
   return '<span class="ratio-arrow '+tone+'" aria-hidden="true">'+arrow+'</span><span class="ratio-ref '+tone+'">'+esc(reference)+'</span>';
 }
 
+function cashFlowCheck(r) {
+  const m = r.metrics, ocf = m.operating_cash_flow, cap = m.market_cap;
+  const financial = /bank|financial|insurance|credit|mortgage|capital market/i.test((r.sector||'')+' '+(r.industry||''));
+  const currencyOK = r.financial_currency && r.financial_currency === r.currency;
+  const valid = currencyOK && isNum(ocf) && isNum(cap) && cap > 0 && !financial;
+  const positive = valid && ocf > 0;
+  const multiple = positive ? cap/ocf : null;
+  const pass = positive && multiple <= 30;
+  const score = valid ? (pass?100:0) : null;
+  const reference = positive ? ocf*30 : null;
+  const period = (r.annual || []).find(row => isNum(row.cfo));
+  const showCash = value => currencyOK ? bigMoney(value,r) : 'Currency verification required';
+  const cards = [
+    ['Annual operating cash flow',showCash(ocf)],
+    ['Annual free cash flow',showCash(m.free_cash_flow)],
+    ['Current market cap',bigMoney(cap,r)],
+    ['30× OCF reference cap',positive?bigMoney(reference,r):'N/A'],
+    ['Market cap / OCF',positive?nfmt(multiple,2)+'×':'N/A'],
+    ['30× rule score',score===null?'N/A':score+'/100']
+  ];
+  let conclusion = financial ? 'Bank/NBFC/insurance needs sector-specific cash-flow analysis.' :
+    !currencyOK ? 'Quote and financial-statement currency must match before calculating the score.' :
+    !valid ? 'Market cap or annual operating cash flow is unavailable.' :
+    !positive ? 'Annual operating cash flow is zero or negative. 30× check fails.' :
+    pass ? 'Pass: market cap is within 30× annual operating cash flow.' :
+    'Fails 30× check: market cap exceeds the selected reference by '+nfmt((cap/reference-1)*100,1)+'%.';
+  return '<article class="report-card chart-card" id="cash-flow-check"><h3>Cash Flow &amp; 30× Market Cap Check</h3>'+
+    '<p class="section-sub">Latest annual cash-flow period: '+esc(period?.period_end || period?.year || 'Unavailable')+
+    ' · Market cap uses provider quote data · Statement currency: '+esc(r.financial_currency || 'Unverified')+'</p>'+
+    '<div class="feature-grid">'+cards.map(([label,value])=>'<div class="feature-tile"><span>'+esc(label)+
+    '</span><strong>'+esc(value)+'</strong></div>').join('')+'</div>'+
+    '<p class="financial-amount '+(score===null?'':pass?'strong':'weak')+'">'+(score===null?'—':pass?'✓':'!')+' '+esc(conclusion)+'</p>'+
+    '<p class="section-sub">Formula: market cap ÷ annual operating cash flow. Score = 100 when positive OCF and multiple ≤30; otherwise 0. Missing or inapplicable data = N/A. This score measures only this valuation screen. Review earnings quality, debt, growth and peers alongside it.</p>'+
+    '<details><summary>Source and interpretation</summary><p>In his 2021 Business Today interview, Rakesh Jhunjhunwala described valuations of consistent companies around 30× cash flow in a bear market and 40× in a bull market. StockSahi applies your selected 30× threshold to reported annual operating cash flow as a screening assumption.</p>'+
+    '<a href="https://www.businesstoday.in/magazine/interview/story/rakesh-jhunjhunwala-on-his-investment-mantra-309629-2021-10-18" target="_blank" rel="noopener noreferrer">Read interview ↗</a></details></article>';
+}
+
 function renderReport(r){
   const daily = r.daily_change;
   const direction = isNum(daily) && daily !== 0 ? (daily > 0 ? 'up' : 'down') : 'flat';
@@ -307,6 +344,7 @@ function renderReport(r){
     <article class="report-card quote-card"><div><div class="quote-head"><span class="tiny-label">LATEST AVAILABLE CLOSE</span><span class="exchange-chip">${esc(r.exchange||'SHARE')}</span></div><div class="quote-price" style="color:${direction==='up'?'#58d5aa':direction==='down'?'#ff9098':'inherit'}">${priceFmt(r.price,r)}</div><div class="quote-date ${direction}">${arrow}${isNum(daily)?(daily>0?'+':'')+nfmt(daily,2)+' ('+signed(r.daily_change_pct)+') vs previous close':'Daily change unavailable'}</div><div class="quote-date">${esc(r.quote_date)} · price may be delayed</div></div><div class="quote-bottom"><div><small>1-year price change</small><strong class="${(r.one_year_return||0)<0?'down':'up'}">${signed(r.one_year_return)}</strong></div><div><small>Market cap</small><strong>${bigMoney(m.market_cap,r)}</strong></div></div></article>
   </div>
 
+  ${cashFlowCheck(r)}
   <div class="report-grid">
     <article class="report-card"><h3>Financial health score</h3><div class="section-sub">Rules-based weightage, 100-point scale</div>${s.categories.map(c=>`<div class="score-row"><label>${esc(c.label)}</label><div class="bar-track"><div class="bar-fill" style="width:${isNum(c.score)?c.score:0}%"></div></div><div class="score-value">${isNum(c.score)?Math.round(c.score):'N/A'}</div></div>`).join('')}<div class="chart-footer">Note: Missing metric score mein zero nahi lagaya. Available groups ke basis par weight adjust hota hai.</div></article>
     <article class="report-card"><h3>Key financial ratios</h3><div class="section-sub">Screening guides · thresholds vary by industry</div><div class="metric-grid">${metrics.map(([label,value,hint],i)=>'<div class="metric ratio-card"><div class="metric-label">'+esc(label)+'</div><div class="metric-value">'+esc(value)+'<span class="ratio-indicator" data-ratio="'+i+'">'+ratioIndicator(ratioGuide(i,m,{},/bank|financial services/i.test((r.industry||'')+' '+(r.sector||''))))+'</span></div><div class="metric-hint">'+esc(hint)+'</div></div>').join('')}</div></article>

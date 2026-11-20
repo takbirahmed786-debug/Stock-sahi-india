@@ -216,6 +216,7 @@ def fetch_stock(symbol):
         'name': info.get('longName') or info.get('shortName') or symbol,
         'exchange': 'NSE' if symbol.endswith('.NS') else ('BSE' if symbol.endswith('.BO') else info.get('exchange','')),
         'currency': info.get('currency') or ('INR' if symbol.endswith(('.NS','.BO')) else 'USD'),
+        'financial_currency': info.get('financialCurrency'),
         'sector': info.get('sector') or 'Not available',
         'industry': info.get('industry') or 'Not available',
         'info': info,
