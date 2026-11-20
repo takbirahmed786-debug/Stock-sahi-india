@@ -284,7 +284,7 @@ function cashFlowCheck(r) {
   const score = valid ? (pass?100:0) : null;
   const reference = positive ? ocf*30 : null;
   const period = (r.annual || []).find(row => isNum(row.cfo));
-  const showCash = value => currencyOK ? bigMoney(value,r) : 'Currency verification required';
+  const showCash = value => !isNum(value) ? 'Unavailable' : r.financial_currency ? bigMoney(value,{currency:r.financial_currency}) : nfmt(value,0)+' (reported units; currency unverified)';
   const cards = [
     ['Annual operating cash flow',showCash(ocf)],
     ['Annual free cash flow',showCash(m.free_cash_flow)],
