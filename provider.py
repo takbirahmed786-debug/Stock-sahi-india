@@ -193,6 +193,15 @@ def fetch_stock(symbol):
     try: info = ticker.info or {}
     except Exception: info = {}
 
+    # Quote summary can fail while the independent price/share-count feed works.
+    if safe_float(info.get('marketCap')) is None:
+        try:
+            market_cap = safe_float(ticker.fast_info['market_cap'])
+            if market_cap is not None and market_cap > 0:
+                info['marketCap'] = market_cap
+        except Exception:
+            pass
+
     # Individual request failures must not silently generate invented financial data.
     income = dataframe(lambda: ticker.income_stmt)
     balance = dataframe(lambda: ticker.balance_sheet)

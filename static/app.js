@@ -306,6 +306,14 @@ function cashFlowCheck(r) {
     '</span><strong>'+esc(value)+'</strong></div>').join('')+'</div>'+
     '<p class="financial-amount '+(score===null?'':pass?'strong':'weak')+'">'+(score===null?'—':pass?'✓':'!')+' '+esc(conclusion)+'</p>'+
     '<p class="section-sub">Formula: market cap ÷ annual operating cash flow. Score = 100 when positive OCF and multiple ≤30; otherwise 0. Missing or inapplicable data = N/A. This score measures only this valuation screen. Review earnings quality, debt, growth and peers alongside it.</p>'+
+    '<details open class="valuation-tool"><summary>Calculate with verified figures</summary>'+
+    '<p>Use annual operating cash flow and market cap in the same currency and unit. INR inputs below use ₹ crore. Values you enter are marked manual.</p>'+
+    '<form id="cash-input-form" class="feature-grid">'+
+    '<label>Annual operating cash flow (₹ crore)<input id="cash-input-ocf" type="number" step="any" required></label>'+
+    '<label>Market cap (₹ crore)<input id="cash-input-cap" type="number" min="0.01" step="any" required></label>'+
+    '<label><input id="cash-input-confirm" type="checkbox" required> I verified both figures are INR crore</label>'+
+    '<button type="submit" class="search-btn">Calculate 30× score</button></form>'+
+    '<div id="cash-input-result" aria-live="polite"></div></details>'+
     '<details><summary>Source and interpretation</summary><p>In his 2021 Business Today interview, Rakesh Jhunjhunwala described valuations of consistent companies around 30× cash flow in a bear market and 40× in a bull market. StockSahi applies your selected 30× threshold to reported annual operating cash flow as a screening assumption.</p>'+
     '<a href="https://www.businesstoday.in/magazine/interview/story/rakesh-jhunjhunwala-on-his-investment-mantra-309629-2021-10-18" target="_blank" rel="noopener noreferrer">Read interview ↗</a></details></article>';
 }
@@ -370,6 +378,7 @@ function renderReport(r){
   <article class="report-card chart-card"><h3>Verify before investing</h3><div class="section-sub">Jo cheezein automated ratio analysis se confirm nahi hotin</div>${list(r.cautions,'neutral')}</article>
   <article class="report-card chart-card"><h3>Data source & calculation</h3><p style="font-size:12px;color:#718696;line-height:1.8">${esc(r.methodology)}<br>Report generated: ${esc(new Date(r.fetched_at).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',dateStyle:'medium',timeStyle:'short'}))} IST. Delayed price, incomplete statements, restatements aur sector differences ho sakte hain.</p><div class="sources"><a href="${esc(r.source_url)}" target="_blank" rel="noopener noreferrer">Yahoo Finance source ↗</a><a href="https://www.nseindia.com/companies-listing/corporate-filings-financial-results" target="_blank" rel="noopener noreferrer">NSE official financial filings ↗</a><a href="https://www.bseindia.com/" target="_blank" rel="noopener noreferrer">BSE official filings ↗</a></div></article>
   `;
+  setupCashFlowInputs(r);
   setupValuation(r);
   setupScenarioLab(r);
   resetPeers(r);
@@ -827,5 +836,34 @@ function setupScenarioLab(report) {
     card.addEventListener('input',render);
     manualEps?.addEventListener('input',render);
     render();
+  });
+}
+
+function calculateCashFlowScore(ocf, cap) {
+  if (!isNum(ocf) || !isNum(cap) || cap <= 0) return null;
+  const multiple = ocf > 0 ? cap / ocf : null;
+  return {multiple, reference:ocf > 0 ? ocf * 30 : null, score:multiple !== null && multiple <= 30 ? 100 : 0};
+}
+function setupCashFlowInputs(report) {
+  const form = byId('cash-input-form');
+  if (!form) return;
+  const ocf = byId('cash-input-ocf'), cap = byId('cash-input-cap');
+  if (report.currency === 'INR' && isNum(report.metrics.market_cap)) cap.value = report.metrics.market_cap / 1e7;
+  if (report.financial_currency === 'INR' && isNum(report.metrics.operating_cash_flow)) ocf.value = report.metrics.operating_cash_flow / 1e7;
+  form.addEventListener('submit', event => {
+    event.preventDefault();
+    if (!form.reportValidity()) return;
+    const result = byId('cash-input-result');
+    if (/bank|financial|insurance|credit|mortgage|capital market/i.test((report.sector||'')+' '+(report.industry||''))) {
+      result.textContent = '30× operating cash flow score needs a sector-specific approach for financial companies.';
+      return;
+    }
+    const data = calculateCashFlowScore(ocf.valueAsNumber, cap.valueAsNumber);
+    if (!data) { result.textContent = 'Enter valid cash flow and positive market cap.'; return; }
+    result.innerHTML = '<p class="financial-amount '+(data.score?'strong':'weak')+'"><strong>'+
+      data.score+'/100 · '+(data.score?'✓ Pass':'! Fails 30× check')+'</strong></p>'+
+      '<p>Market cap / OCF: '+(data.multiple===null?'N/A (zero or negative cash flow)':nfmt(data.multiple,2)+'×')+
+      ' · 30× reference: '+(data.reference===null?'N/A':'₹'+nfmt(data.reference,2)+' Cr')+
+      '</p><p class="section-sub">Calculated from your manually verified INR crore inputs.</p>';
   });
 }
