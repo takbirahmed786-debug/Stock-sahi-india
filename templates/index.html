@@ -35,7 +35,7 @@
 
     </header>
 
-    <nav class="market-nav"><a href="#future-scenarios">Future Scenarios</a><a href="#market-overview">Market Overview</a><a href="#stock-link">Paste Stock Link</a><a href="#valuation-calculator">Valuation Calculator</a><a href="#market-statistics">Market Statistics</a><a href="#nse-deals">Large Deals</a><a href="#search-form">Stock Research</a><a href="#peer-section">Peer Comparison</a><a href="#portfolio">Portfolio</a><a href="#investment-tools">Investment Tools</a><a href="#watchlist">Watchlist</a><a href="#how-it-works">Methodology</a></nav>
+    <nav class="market-nav"><a href="#future-scenarios">Future Scenarios</a><a href="#market-overview">Market Overview</a><a href="#stock-link">Paste Stock Link</a><a href="#valuation-calculator">Valuation Calculator</a><a href="#nse-deals">Large Deals</a><a href="#search-form">Stock Research</a><a href="#peer-section">Peer Comparison</a><a href="#portfolio">Portfolio</a><a href="#investment-tools">Investment Tools</a><a href="#watchlist">Watchlist</a><a href="#how-it-works">Methodology</a></nav>
     <main>
       <section id="future-scenarios" class="market-board valuation-tool">
         <h2>Future Scenario Lab</h2>
@@ -78,32 +78,7 @@
           <div class="feature-tile"><span>Implied price</span><output id="home-price" aria-live="polite">Enter EPS and P/E</output></div>
         </div>
       </section>
-      <section id="market-statistics" class="market-board" aria-labelledby="market-stat-title">
-        <style>
-          #market-statistics header{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;margin-bottom:14px}
-          #market-statistics h2{margin:0;color:#393171;font-size:22px}
-          .market-stat-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:10px;margin:0}
-          .market-stat-grid div{grid-column:span 3;background:#f7f6fc;border-top:3px solid var(--stat);border-radius:9px;padding:12px;min-width:0}
-          .market-stat-grid div:nth-child(n+9){grid-column:span 4}
-          .market-stat-grid dt{font-size:13px;color:#504a66}
-          .market-stat-grid dd{margin:5px 0 0;color:var(--stat);font-size:clamp(16px,2vw,23px);font-weight:800;overflow-wrap:anywhere}
-          @media(max-width:650px){.market-stat-grid div,.market-stat-grid div:nth-child(n+9){grid-column:span 6}}
-        </style>
-        <header><h2 id="market-stat-title">Market Statistics</h2><span class="market-source" id="market-stat-time">Saved snapshot · 16 Nov 2026, 16:00:28 IST</span></header>
-        <dl class="market-stat-grid">
-          <div style="--stat:#51408b"><dt>Stocks traded</dt><dd data-market-stat="total">3,774</dd></div>
-          <div style="--stat:#22724e"><dt>Advances</dt><dd data-market-stat="advances">1,168</dd></div>
-          <div style="--stat:#a8313f"><dt>Declines</dt><dd data-market-stat="declines">2,504</dd></div>
-          <div style="--stat:#875014"><dt>Unchanged</dt><dd data-market-stat="unchange">102</dd></div>
-          <div style="--stat:#22724e"><dt>52-week high</dt><dd data-market-stat="high">109</dd></div>
-          <div style="--stat:#a8313f"><dt>52-week low</dt><dd data-market-stat="low">125</dd></div>
-          <div style="--stat:#22724e"><dt>Upper circuit</dt><dd data-market-stat="upper">17</dd></div>
-          <div style="--stat:#a8313f"><dt>Lower circuit</dt><dd data-market-stat="lower">6</dd></div>
-          <div style="--stat:#51408b"><dt>Registered client accounts</dt><dd data-market-stat="accounts">27,69,31,496</dd></div>
-          <div style="--stat:#51408b"><dt>Market capitalization</dt><dd data-market-stat="cap">₹504.63 lakh crore</dd></div>
-        </dl>
-        <p class="market-source">Source: NSE · <a href="https://www.nseindia.com/" target="_blank" rel="noopener noreferrer">View latest on NSE ↗</a></p>
-      </section>
+      
       <details id="nse-deals" class="report-card">
         <summary>NSE Large Deals</summary>
         <div class="chart-tabs" aria-label="Deal category" style="margin:14px 0;flex-wrap:wrap">
@@ -176,6 +151,5 @@
     <footer class="footer"><span>© 2026 StockSahi India · Personal research dashboard · Shaikh Takbir Ahammed</span><span>Data: Yahoo Finance (may be delayed) · No guaranteed returns</span></footer>
   </div>
   <script src="/static/app.js?v=21" defer></script>
-  <script src="/static/market-statistics.js?v=19" defer></script>
 </body>
 </html>
