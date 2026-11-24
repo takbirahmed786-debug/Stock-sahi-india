@@ -133,6 +133,18 @@ def source_rows(income, balance, cashflow):
     """Join statement values by exact fiscal period (never by column position)."""
     keys = {
         'revenue': (income, ['Total Revenue','Operating Revenue']),
+        'gross_profit': (income, ['Gross Profit']),
+        'cost_of_revenue': (income, ['Cost Of Revenue']),
+        'operating_income': (income, ['Operating Income']),
+        'net_common': (income, ['Net Income Common Stockholders']),
+        'basic_eps': (income, ['Basic EPS']),
+        'basic_shares': (income, ['Basic Average Shares']),
+        'interest_expense': (income, ['Interest Expense']),
+        'common_equity': (balance, ['Common Stock Equity', 'Stockholders Equity']),
+        'inventory': (balance, ['Inventory']),
+        'cash_short_investments': (balance, ['Cash Cash Equivalents And Short Term Investments']),
+        'receivables': (balance, ['Receivables']),
+
         'profit': (income, ['Net Income','Net Income Common Stockholders','Net Income From Continuing Operation Net Minority Interest']),
         'ebit': (income, ['EBIT','Operating Income']),
         'eps': (income, ['Diluted EPS','Basic EPS']),
@@ -226,6 +238,8 @@ def fetch_stock(symbol):
         'exchange': 'NSE' if symbol.endswith('.NS') else ('BSE' if symbol.endswith('.BO') else info.get('exchange','')),
         'currency': info.get('currency') or ('INR' if symbol.endswith(('.NS','.BO')) else 'USD'),
         'financial_currency': info.get('financialCurrency'),
+        'shares_outstanding': safe_float(info.get('sharesOutstanding')),
+        'trailing_dividend_per_share': safe_float(info.get('trailingAnnualDividendRate')),
         'sector': info.get('sector') or 'Not available',
         'industry': info.get('industry') or 'Not available',
         'info': info,
